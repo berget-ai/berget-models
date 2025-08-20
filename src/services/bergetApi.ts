@@ -1,4 +1,4 @@
-import { Model } from '../types/model';
+import { Model, TestDetail } from '../types/model';
 
 const BASE_URL = 'https://backend-api.berget.ai/v1';
 
@@ -34,7 +34,43 @@ export async function fetchModels(apiKey: string): Promise<Model[]> {
   }));
 }
 
-export async function testToolUse(model: Model, apiKey: string): Promise<boolean> {
+export async function testToolUse(model: Model, apiKey: string): Promise<TestDetail> {
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: 'user',
+        content: 'What is the weather like today?'
+      }
+    ],
+    tools: [
+      {
+        type: 'function',
+        function: {
+          name: 'get_weather',
+          description: 'Get current weather',
+          parameters: {
+            type: 'object',
+            properties: {
+              location: {
+                type: 'string',
+                description: 'The location to get weather for'
+              }
+            },
+            required: ['location']
+          }
+        }
+      }
+    ],
+    tool_choice: 'auto',
+    max_tokens: 100
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
   try {
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -42,46 +78,47 @@ export async function testToolUse(model: Model, apiKey: string): Promise<boolean
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: model.id,
-        messages: [
-          {
-            role: 'user',
-            content: 'What is the weather like today?'
-          }
-        ],
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'get_weather',
-              description: 'Get current weather',
-              parameters: {
-                type: 'object',
-                properties: {
-                  location: {
-                    type: 'string',
-                    description: 'The location to get weather for'
-                  }
-                },
-                required: ['location']
-              }
-            }
-          }
-        ],
-        tool_choice: 'auto',
-        max_tokens: 100
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
-    return response.ok && data.choices?.[0]?.message?.tool_calls?.length > 0;
-  } catch {
-    return false;
+    const success = response.ok && data.choices?.[0]?.message?.tool_calls?.length > 0;
+    
+    return {
+      success,
+      curlCommand,
+      response: data,
+      errorCode: response.ok ? undefined : response.status.toString(),
+      message: success ? 'Tool use test successful' : 'Model did not use tools'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-export async function testJsonSupport(model: Model, apiKey: string): Promise<boolean> {
+export async function testJsonSupport(model: Model, apiKey: string): Promise<TestDetail> {
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: 'user',
+        content: 'Return a JSON object with a "test" field set to true'
+      }
+    ],
+    response_format: { type: 'json_object' },
+    max_tokens: 50
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
   try {
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -89,35 +126,67 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<boo
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: model.id,
-        messages: [
-          {
-            role: 'user',
-            content: 'Return a JSON object with a "test" field set to true'
-          }
-        ],
-        response_format: { type: 'json_object' },
-        max_tokens: 50
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
-    if (!response.ok) return false;
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        curlCommand,
+        response: data,
+        errorCode: response.status.toString(),
+        message: 'API request failed'
+      };
+    }
     
     try {
       const content = data.choices?.[0]?.message?.content;
       const parsed = JSON.parse(content || '{}');
-      return parsed.test === true;
+      const success = parsed.test === true;
+      
+      return {
+        success,
+        curlCommand,
+        response: data,
+        message: success ? 'JSON response valid' : 'JSON response invalid'
+      };
     } catch {
-      return false;
+      return {
+        success: false,
+        curlCommand,
+        response: data,
+        message: 'Failed to parse JSON response'
+      };
     }
-  } catch {
-    return false;
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-export async function testBasicCompletion(model: Model, apiKey: string): Promise<boolean> {
+export async function testBasicCompletion(model: Model, apiKey: string): Promise<TestDetail> {
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: 'user',
+        content: 'Hello, please respond with "Test successful"'
+      }
+    ],
+    max_tokens: 20
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
   try {
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -125,26 +194,47 @@ export async function testBasicCompletion(model: Model, apiKey: string): Promise
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: model.id,
-        messages: [
-          {
-            role: 'user',
-            content: 'Hello, please respond with "Test successful"'
-          }
-        ],
-        max_tokens: 20
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
-    return response.ok && data.choices?.[0]?.message?.content?.includes('Test successful');
-  } catch {
-    return false;
+    const success = response.ok && data.choices?.[0]?.message?.content?.includes('Test successful');
+    
+    return {
+      success,
+      curlCommand,
+      response: data,
+      errorCode: response.ok ? undefined : response.status.toString(),
+      message: success ? 'Basic completion test successful' : 'Model did not respond correctly'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-export async function testStreamingSupport(model: Model, apiKey: string): Promise<boolean> {
+export async function testStreamingSupport(model: Model, apiKey: string): Promise<TestDetail> {
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: 'user',
+        content: 'Hello'
+      }
+    ],
+    stream: true,
+    max_tokens: 10
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
   try {
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -152,38 +242,88 @@ export async function testStreamingSupport(model: Model, apiKey: string): Promis
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: model.id,
-        messages: [
-          {
-            role: 'user',
-            content: 'Hello'
-          }
-        ],
-        stream: true,
-        max_tokens: 10
-      }),
+      body: JSON.stringify(requestBody),
     });
 
-    if (!response.ok) return false;
+    if (!response.ok) {
+      const errorData = await response.text();
+      return {
+        success: false,
+        curlCommand,
+        response: errorData,
+        errorCode: response.status.toString(),
+        message: 'Streaming request failed'
+      };
+    }
 
     // Read a small chunk of the response to check for streaming format
     const reader = response.body?.getReader();
-    if (!reader) return false;
+    if (!reader) {
+      return {
+        success: false,
+        curlCommand,
+        message: 'No readable stream'
+      };
+    }
 
     const { value } = await reader.read();
     reader.releaseLock();
 
-    if (!value) return false;
+    if (!value) {
+      return {
+        success: false,
+        curlCommand,
+        message: 'Empty stream response'
+      };
+    }
 
     const chunk = new TextDecoder().decode(value);
-    return chunk.includes('data: {') && (chunk.includes('"choices"') || chunk.includes('"delta"'));
-  } catch {
-    return false;
+    const success = chunk.includes('data: {') && (chunk.includes('"choices"') || chunk.includes('"delta"'));
+    
+    return {
+      success,
+      curlCommand,
+      response: chunk,
+      message: success ? 'Streaming test successful' : 'Invalid streaming format'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-export async function testMultimodal(model: Model, apiKey: string): Promise<boolean> {
+export async function testMultimodal(model: Model, apiKey: string): Promise<TestDetail> {
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'What do you see in this image?'
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+            }
+          }
+        ]
+      }
+    ],
+    max_tokens: 50
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
   try {
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -191,37 +331,40 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<bool
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: model.id,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'What do you see in this image?'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-                }
-              }
-            ]
-          }
-        ],
-        max_tokens: 50
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
-    return response.ok && data.choices?.[0]?.message?.content?.length > 0;
-  } catch {
-    return false;
+    const success = response.ok && data.choices?.[0]?.message?.content?.length > 0;
+    
+    return {
+      success,
+      curlCommand,
+      response: data,
+      errorCode: response.ok ? undefined : response.status.toString(),
+      message: success ? 'Multimodal test successful' : 'Model did not process image'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-export async function testEmbedding(model: Model, apiKey: string): Promise<boolean> {
+export async function testEmbedding(model: Model, apiKey: string): Promise<TestDetail> {
+  const requestBody = {
+    model: model.id,
+    input: 'Test embedding text',
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/embeddings" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
   try {
     const response = await fetch(`${BASE_URL}/embeddings`, {
       method: 'POST',
@@ -229,20 +372,45 @@ export async function testEmbedding(model: Model, apiKey: string): Promise<boole
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: model.id,
-        input: 'Test embedding text',
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
-    return response.ok && Array.isArray(data.data) && data.data.length > 0 && Array.isArray(data.data[0].embedding);
-  } catch {
-    return false;
+    const success = response.ok && Array.isArray(data.data) && data.data.length > 0 && Array.isArray(data.data[0].embedding);
+    
+    return {
+      success,
+      curlCommand,
+      response: data,
+      errorCode: response.ok ? undefined : response.status.toString(),
+      message: success ? 'Embedding test successful' : 'Invalid embedding response'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-export async function testReranking(model: Model, apiKey: string): Promise<boolean> {
+export async function testReranking(model: Model, apiKey: string): Promise<TestDetail> {
+  const requestBody = {
+    model: model.id,
+    query: 'What is artificial intelligence?',
+    documents: [
+      'Artificial intelligence is a branch of computer science',
+      'Machine learning is a subset of AI',
+      'Weather is sunny today'
+    ]
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/rerank" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
   try {
     const response = await fetch(`${BASE_URL}/rerank`, {
       method: 'POST',
@@ -250,25 +418,35 @@ export async function testReranking(model: Model, apiKey: string): Promise<boole
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: model.id,
-        query: 'What is artificial intelligence?',
-        documents: [
-          'Artificial intelligence is a branch of computer science',
-          'Machine learning is a subset of AI',
-          'Weather is sunny today'
-        ]
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
-    return response.ok && Array.isArray(data.results) && data.results.length > 0;
-  } catch {
-    return false;
+    const success = response.ok && Array.isArray(data.results) && data.results.length > 0;
+    
+    return {
+      success,
+      curlCommand,
+      response: data,
+      errorCode: response.ok ? undefined : response.status.toString(),
+      message: success ? 'Reranking test successful' : 'Invalid reranking response'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-export async function testSpeechToText(model: Model, apiKey: string): Promise<boolean> {
+export async function testSpeechToText(model: Model, apiKey: string): Promise<TestDetail> {
+  const curlCommand = `curl -X POST "${BASE_URL}/audio/transcriptions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -F "file=@test.wav" \\
+  -F "model=${model.id}"`;
+
   try {
     // Create a simple audio blob for testing (1 second of silence)
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -289,8 +467,21 @@ export async function testSpeechToText(model: Model, apiKey: string): Promise<bo
     });
 
     const data = await response.json();
-    return response.ok && typeof data.text === 'string';
-  } catch {
-    return false;
+    const success = response.ok && typeof data.text === 'string';
+    
+    return {
+      success,
+      curlCommand,
+      response: data,
+      errorCode: response.ok ? undefined : response.status.toString(),
+      message: success ? 'Speech-to-text test successful' : 'Invalid transcription response'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Table, 
   TableBody, 
@@ -19,9 +20,11 @@ import {
   Settings,
   Zap,
   Minus,
-  Circle
+  Circle,
+  Info,
+  Copy
 } from 'lucide-react';
-import { Model, TestResult, TestFeature } from '../types/model';
+import { Model, TestResult, TestFeature, TestDetail } from '../types/model';
 import { 
   fetchModels, 
   testToolUse, 
@@ -144,15 +147,18 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     const startTime = Date.now();
     
     try {
-      const success = await feature.testFunction(model, apiKey);
+      const testDetail = await feature.testFunction(model, apiKey);
       const duration = Date.now() - startTime;
       
       setTestResults(prev => new Map(prev.set(testKey, {
         modelId: model.id,
         feature: feature.id,
-        status: success ? 'success' : 'error',
-        message: success ? 'Test lyckades' : 'Test misslyckades',
-        duration
+        status: testDetail.success ? 'success' : 'error',
+        message: testDetail.message,
+        duration,
+        curlCommand: testDetail.curlCommand,
+        response: testDetail.response,
+        errorCode: testDetail.errorCode
       })));
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -210,6 +216,15 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
       default:
         return <Circle className="h-4 w-4 text-muted-foreground" />;
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast({
+        title: "Kopierat!",
+        description: "Kommandot har kopierats till urklipp",
+      });
+    });
   };
 
   const getSuccessRate = () => {
@@ -326,18 +341,97 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                       </TableCell>
                       {TEST_FEATURES.map((feature) => {
                         const isSupported = feature.supportedTypes.includes(model.type || 'chat');
+                        const testKey = getTestKey(model.id, feature.id);
+                        const result = testResults.get(testKey);
+                        
                         return (
                           <TableCell key={feature.id} className="text-center">
                             {isSupported ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => runTest(model, feature)}
-                                disabled={isRunningTests}
-                                className="h-8 w-8 p-0 hover:bg-muted/50"
-                              >
-                                {getStatusIcon(getTestKey(model.id, feature.id))}
-                              </Button>
+                              result && (result.status === 'success' || result.status === 'error') ? (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 hover:bg-muted/50"
+                                    >
+                                      {getStatusIcon(testKey)}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-80" align="center">
+                                    <div className="space-y-4">
+                                      <div className="flex items-center justify-between">
+                                        <h4 className="font-semibold">{feature.name} Test</h4>
+                                        <Badge variant={result.status === 'success' ? 'default' : 'destructive'}>
+                                          {result.status === 'success' ? 'Lyckades' : 'Misslyckades'}
+                                        </Badge>
+                                      </div>
+                                      
+                                      <div className="text-sm text-muted-foreground">
+                                        <strong>Modell:</strong> {model.id}
+                                      </div>
+                                      
+                                      {result.message && (
+                                        <div className="text-sm">
+                                          <strong>Meddelande:</strong> {result.message}
+                                        </div>
+                                      )}
+                                      
+                                      {result.duration && (
+                                        <div className="text-sm text-muted-foreground">
+                                          <strong>Tid:</strong> {result.duration}ms
+                                        </div>
+                                      )}
+                                      
+                                      {result.errorCode && (
+                                        <div className="text-sm text-destructive">
+                                          <strong>Felkod:</strong> {result.errorCode}
+                                        </div>
+                                      )}
+                                      
+                                      {result.curlCommand && (
+                                        <div className="space-y-2">
+                                          <div className="flex items-center justify-between">
+                                            <strong className="text-sm">cURL kommando:</strong>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => copyToClipboard(result.curlCommand!)}
+                                              className="h-6 px-2"
+                                            >
+                                              <Copy className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                          <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
+                                            {result.curlCommand}
+                                          </pre>
+                                        </div>
+                                      )}
+                                      
+                                      {result.response && (
+                                        <div className="space-y-2">
+                                          <strong className="text-sm">Svar:</strong>
+                                          <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-h-32">
+                                            {typeof result.response === 'string' 
+                                              ? result.response 
+                                              : JSON.stringify(result.response, null, 2)}
+                                          </pre>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => runTest(model, feature)}
+                                  disabled={isRunningTests}
+                                  className="h-8 w-8 p-0 hover:bg-muted/50"
+                                >
+                                  {getStatusIcon(testKey)}
+                                </Button>
+                              )
                             ) : (
                               <div className="h-8 w-8 flex items-center justify-center">
                                 <Minus className="h-4 w-4 text-muted-foreground" />

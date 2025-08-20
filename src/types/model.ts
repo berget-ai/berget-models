@@ -12,12 +12,23 @@ export interface TestResult {
   status: 'pending' | 'success' | 'error' | 'testing';
   message?: string;
   duration?: number;
+  curlCommand?: string;
+  response?: any;
+  errorCode?: string;
+}
+
+export interface TestDetail {
+  success: boolean;
+  curlCommand: string;
+  response?: any;
+  errorCode?: string;
+  message?: string;
 }
 
 export interface TestFeature {
   id: string;
   name: string;
   description: string;
-  testFunction: (model: Model, apiKey: string) => Promise<boolean>;
+  testFunction: (model: Model, apiKey: string) => Promise<TestDetail>;
   supportedTypes: string[];
 }
