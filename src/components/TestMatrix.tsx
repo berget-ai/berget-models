@@ -18,7 +18,8 @@ import {
   RotateCcw,
   Settings,
   Zap,
-  Minus
+  Minus,
+  Circle
 } from 'lucide-react';
 import { Model, TestResult, TestFeature } from '../types/model';
 import { 
@@ -207,7 +208,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
       case 'error':
         return <X className="h-4 w-4 text-destructive" />;
       default:
-        return <div className="h-4 w-4 rounded-full bg-muted" />;
+        return <Circle className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -358,7 +359,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
           <CardContent className="p-4">
             <div className="flex items-center justify-center space-x-8 text-sm">
               <div className="flex items-center space-x-2">
-                <div className="h-4 w-4 rounded-full bg-muted" />
+                <Circle className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Inte testad</span>
               </div>
               <div className="flex items-center space-x-2">
