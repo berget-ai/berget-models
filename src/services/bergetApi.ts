@@ -26,7 +26,11 @@ export async function fetchModels(apiKey: string): Promise<Model[]> {
   const models = data.data || [];
   return models.map((model: any) => ({
     ...model,
-    type: getModelType(model.id)
+    type: model.model_type === 'text' ? 'chat' : 
+          model.model_type === 'embedding' ? 'embedding' :
+          model.model_type === 'rerank' ? 'rerank' :
+          model.model_type === 'speech-to-text' ? 'speech-to-text' :
+          getModelType(model.id) // fallback to old method
   }));
 }
 
