@@ -149,7 +149,19 @@ export async function testStreamingSupport(model: Model, apiKey: string): Promis
       }),
     });
 
-    return response.ok && response.headers.get('content-type')?.includes('text/plain');
+    if (!response.ok) return false;
+
+    // Read a small chunk of the response to check for streaming format
+    const reader = response.body?.getReader();
+    if (!reader) return false;
+
+    const { value } = await reader.read();
+    reader.releaseLock();
+
+    if (!value) return false;
+
+    const chunk = new TextDecoder().decode(value);
+    return chunk.includes('data: {') && (chunk.includes('"choices"') || chunk.includes('"delta"'));
   } catch {
     return false;
   }
