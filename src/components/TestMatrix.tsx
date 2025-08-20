@@ -338,7 +338,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                               </Button>
                             ) : (
                               <div className="h-8 w-8 flex items-center justify-center">
-                                <span className="text-muted-foreground text-xs">N/A</span>
+                                <span className="text-muted-foreground text-xs">-</span>
                               </div>
                             )}
                           </TableCell>
