@@ -17,7 +17,8 @@ import {
   Play, 
   RotateCcw,
   Settings,
-  Zap
+  Zap,
+  Minus
 } from 'lucide-react';
 import { Model, TestResult, TestFeature } from '../types/model';
 import { 
@@ -338,7 +339,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                               </Button>
                             ) : (
                               <div className="h-8 w-8 flex items-center justify-center">
-                                <span className="text-muted-foreground text-xs">-</span>
+                                <Minus className="h-4 w-4 text-muted-foreground" />
                               </div>
                             )}
                           </TableCell>
