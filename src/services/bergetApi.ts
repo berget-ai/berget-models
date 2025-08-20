@@ -1,6 +1,14 @@
 import { Model } from '../types/model';
 
-const BASE_URL = 'https://api.berget.ai/v1';
+const BASE_URL = 'https://backend-api.berget.ai/v1';
+
+export function getModelType(modelId: string): 'chat' | 'embedding' | 'rerank' | 'speech-to-text' {
+  const id = modelId.toLowerCase();
+  if (id.includes('rerank') || id.includes('bge-reranker')) return 'rerank';
+  if (id.includes('embed') || id.includes('embedding')) return 'embedding';
+  if (id.includes('whisper')) return 'speech-to-text';
+  return 'chat';
+}
 
 export async function fetchModels(apiKey: string): Promise<Model[]> {
   const response = await fetch(`${BASE_URL}/models`, {
@@ -15,7 +23,11 @@ export async function fetchModels(apiKey: string): Promise<Model[]> {
   }
 
   const data = await response.json();
-  return data.data || [];
+  const models = data.data || [];
+  return models.map((model: any) => ({
+    ...model,
+    type: getModelType(model.id)
+  }));
 }
 
 export async function testToolUse(model: Model, apiKey: string): Promise<boolean> {
@@ -200,6 +212,80 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<bool
 
     const data = await response.json();
     return response.ok && data.choices?.[0]?.message?.content?.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+export async function testEmbedding(model: Model, apiKey: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${BASE_URL}/embeddings`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: model.id,
+        input: 'Test embedding text',
+      }),
+    });
+
+    const data = await response.json();
+    return response.ok && Array.isArray(data.data) && data.data.length > 0 && Array.isArray(data.data[0].embedding);
+  } catch {
+    return false;
+  }
+}
+
+export async function testReranking(model: Model, apiKey: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${BASE_URL}/rerank`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: model.id,
+        query: 'What is artificial intelligence?',
+        documents: [
+          'Artificial intelligence is a branch of computer science',
+          'Machine learning is a subset of AI',
+          'Weather is sunny today'
+        ]
+      }),
+    });
+
+    const data = await response.json();
+    return response.ok && Array.isArray(data.results) && data.results.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+export async function testSpeechToText(model: Model, apiKey: string): Promise<boolean> {
+  try {
+    // Create a simple audio blob for testing (1 second of silence)
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const buffer = audioContext.createBuffer(1, audioContext.sampleRate, audioContext.sampleRate);
+    
+    // Convert to WAV format
+    const formData = new FormData();
+    const audioBlob = new Blob([buffer], { type: 'audio/wav' });
+    formData.append('file', audioBlob, 'test.wav');
+    formData.append('model', model.id);
+
+    const response = await fetch(`${BASE_URL}/audio/transcriptions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    return response.ok && typeof data.text === 'string';
   } catch {
     return false;
   }

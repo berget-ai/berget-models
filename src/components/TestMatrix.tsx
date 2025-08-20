@@ -26,7 +26,10 @@ import {
   testJsonSupport, 
   testBasicCompletion,
   testStreamingSupport,
-  testMultimodal
+  testMultimodal,
+  testEmbedding,
+  testReranking,
+  testSpeechToText
 } from '../services/bergetApi';
 import { useToast } from '@/hooks/use-toast';
 
@@ -40,31 +43,57 @@ const TEST_FEATURES: TestFeature[] = [
     id: 'basic',
     name: 'Basic Chat',
     description: 'Grundläggande chat completion',
-    testFunction: testBasicCompletion
+    testFunction: testBasicCompletion,
+    supportedTypes: ['chat']
   },
   {
     id: 'tools',
     name: 'Tool Use',
     description: 'Function calling/tools support',
-    testFunction: testToolUse
+    testFunction: testToolUse,
+    supportedTypes: ['chat']
   },
   {
     id: 'json',
     name: 'JSON Mode',
     description: 'Strukturerad JSON output',
-    testFunction: testJsonSupport
+    testFunction: testJsonSupport,
+    supportedTypes: ['chat']
   },
   {
     id: 'streaming',
     name: 'Streaming',
     description: 'Real-time streaming responses',
-    testFunction: testStreamingSupport
+    testFunction: testStreamingSupport,
+    supportedTypes: ['chat']
   },
   {
     id: 'multimodal',
     name: 'Multimodal',
     description: 'Bildanalys och vision',
-    testFunction: testMultimodal
+    testFunction: testMultimodal,
+    supportedTypes: ['chat']
+  },
+  {
+    id: 'embedding',
+    name: 'Embeddings',
+    description: 'Text embeddings',
+    testFunction: testEmbedding,
+    supportedTypes: ['embedding']
+  },
+  {
+    id: 'reranking',
+    name: 'Reranking',
+    description: 'Document reranking',
+    testFunction: testReranking,
+    supportedTypes: ['rerank']
+  },
+  {
+    id: 'speech',
+    name: 'Speech-to-Text',
+    description: 'Audio transkription',
+    testFunction: testSpeechToText,
+    supportedTypes: ['speech-to-text']
   }
 ];
 
@@ -140,7 +169,11 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     setIsRunningTests(true);
     
     for (const model of models) {
-      for (const feature of TEST_FEATURES) {
+      const relevantFeatures = TEST_FEATURES.filter(feature => 
+        feature.supportedTypes.includes(model.type || 'chat')
+      );
+      
+      for (const feature of relevantFeatures) {
         await runTest(model, feature);
         // Kort paus mellan tester för att undvika rate limiting
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -150,7 +183,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     setIsRunningTests(false);
     toast({
       title: "Alla tester slutförda",
-      description: `Testade ${models.length} modeller med ${TEST_FEATURES.length} funktioner`,
+      description: `Testade ${models.length} modeller med relevanta funktioner`,
     });
   };
 
@@ -284,24 +317,33 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                           <div>
                             <div className="font-semibold text-foreground">{model.id}</div>
                             <div className="text-xs text-muted-foreground">
-                              {model.owned_by}
+                              {model.owned_by} • {model.type}
                             </div>
                           </div>
                         </div>
                       </TableCell>
-                      {TEST_FEATURES.map((feature) => (
-                        <TableCell key={feature.id} className="text-center">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => runTest(model, feature)}
-                            disabled={isRunningTests}
-                            className="h-8 w-8 p-0 hover:bg-muted/50"
-                          >
-                            {getStatusIcon(getTestKey(model.id, feature.id))}
-                          </Button>
-                        </TableCell>
-                      ))}
+                      {TEST_FEATURES.map((feature) => {
+                        const isSupported = feature.supportedTypes.includes(model.type || 'chat');
+                        return (
+                          <TableCell key={feature.id} className="text-center">
+                            {isSupported ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => runTest(model, feature)}
+                                disabled={isRunningTests}
+                                className="h-8 w-8 p-0 hover:bg-muted/50"
+                              >
+                                {getStatusIcon(getTestKey(model.id, feature.id))}
+                              </Button>
+                            ) : (
+                              <div className="h-8 w-8 flex items-center justify-center">
+                                <span className="text-muted-foreground text-xs">N/A</span>
+                              </div>
+                            )}
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
                   ))}
                 </TableBody>
