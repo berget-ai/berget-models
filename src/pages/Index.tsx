@@ -1,13 +1,39 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import ApiKeyInput from '../components/ApiKeyInput';
+import TestMatrix from '../components/TestMatrix';
 
 const Index = () => {
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleApiKeySubmit = async (key: string) => {
+    setIsLoading(true);
+    // Validate API key by trying to fetch models
+    try {
+      setApiKey(key);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setApiKey(null);
+  };
+
+  if (!apiKey) {
+    return (
+      <ApiKeyInput 
+        onApiKeySubmit={handleApiKeySubmit} 
+        isLoading={isLoading}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <TestMatrix 
+      apiKey={apiKey} 
+      onLogout={handleLogout}
+    />
   );
 };
 
