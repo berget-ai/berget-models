@@ -7,8 +7,8 @@
 @layer base {
   :root {
     /* Base Colors */
-    --background: 26 26 26; /* #1a1a1a */
-    --surface: 37 35 32; /* #e5ddd5 adjusted for HSL */
+    --background: 0 0% 10%; /* #1a1a1a */
+    --surface: 0 0% 15%; /* surface elements */
     --foreground: 0 0% 100%; /* #ffffff */
     --text-secondary: 0 0% 100% / 0.6; /* rgba(255, 255, 255, 0.6) */
     --text-tertiary: 0 0% 100% / 0.4; /* rgba(255, 255, 255, 0.4) */
