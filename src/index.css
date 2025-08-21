@@ -1,52 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Berget AI Visual Identity Guide - Design System
 All colors MUST be HSL.
+Brand Colors: #52B788 (Primary), #2D6A4F (Dark Green), #74C69D (Light Green)
+Background: #1A1A1A, Warning: #F59E0B, Error: #FF0033
 */
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    /* Berget AI Brand Colors */
+    --background: 0 0% 10%;  /* #1A1A1A */
+    --foreground: 0 0% 100%; /* #FFFFFF */
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 240 5% 6%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 142 76% 36%;
-    --primary-foreground: 355 7% 97%;
+    /* Primary Green - #52B788 */
+    --primary: 146 40% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 0 0% 98%;
+    /* Dark Green - #2D6A4F */
+    --secondary: 146 42% 29%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 5% 6%;
-    --muted-foreground: 240 5% 64.9%;
+    /* Light Green - #74C69D */
+    --accent: 146 33% 61%;
+    --accent-foreground: 0 0% 10%;
 
-    --accent: 240 4% 16%;
-    --accent-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    /* Error - #FF0033 */
+    --destructive: 348 100% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 20%;
-    --input: 240 6% 20%;
-    --ring: 142 76% 36%;
-
-    --success: 142 76% 36%;
-    --success-foreground: 355 7% 97%;
-    
+    /* Warning - #F59E0B */
     --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
-    
-    --gradient-primary: linear-gradient(135deg, hsl(240 6% 10%), hsl(240 5% 6%));
-    --gradient-accent: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 69% 58%));
-    --shadow-glow: 0 0 40px hsl(142 76% 36% / 0.15);
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --warning-foreground: 0 0% 10%;
 
+    /* Success uses Primary Green */
+    --success: 146 40% 53%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 146 40% 53%;
+
+    /* Berget AI Brand Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 10%), hsl(146 42% 29% / 0.2));
+    --gradient-brand: linear-gradient(135deg, hsl(146 40% 53%), hsl(146 33% 61%));
+    --gradient-dark: linear-gradient(180deg, hsl(0 0% 10%), hsl(146 42% 29% / 0.1));
+    
+    /* Shadows with brand colors */
+    --shadow-brand: 0 10px 40px hsl(146 40% 53% / 0.15);
+    --shadow-elegant: 0 8px 32px hsl(0 0% 0% / 0.3);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
@@ -67,33 +83,34 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark theme maintains Berget AI brand consistency */
+    --background: 0 0% 6%;
+    --foreground: 0 0% 100%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 146 40% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 146 42% 29%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 146 33% 61%;
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 348 100% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 0 0% 15%;
+    --input: 0 0% 12%;
+    --ring: 146 40% 53%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -111,6 +128,39 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-inter;
+    background-image: var(--gradient-primary);
+    background-attachment: fixed;
+  }
+
+  /* Berget AI Typography Scale */
+  h1 {
+    @apply text-4xl font-semibold tracking-tight;
+  }
+
+  h2 {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-medium tracking-tight;
+  }
+
+  h4 {
+    @apply text-xl font-medium tracking-tight;
+  }
+
+  /* Icon consistency - always white for UI clarity */
+  .icon-default {
+    @apply text-foreground;
+  }
+
+  /* Brand gradient backgrounds */
+  .bg-brand-gradient {
+    background: var(--gradient-brand);
+  }
+
+  .bg-dark-gradient {
+    background: var(--gradient-dark);
   }
 }
