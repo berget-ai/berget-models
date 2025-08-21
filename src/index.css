@@ -1,124 +1,108 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Berget AI Visual Identity Guide - Design System
-All colors MUST be HSL.
-Brand Colors: #52B788 (Primary), #2D6A4F (Dark Green), #74C69D (Light Green)
-Background: #1A1A1A, Warning: #F59E0B, Error: #FF0033
-*/
+/* Berget AI Visual Identity Guide - Design System */
 
 @layer base {
   :root {
-    /* Berget AI Brand Colors */
-    --background: 0 0% 10%;  /* #1A1A1A */
-    --foreground: 0 0% 100%; /* #FFFFFF */
+    /* Base Colors */
+    --background: 26 26 26; /* #1a1a1a */
+    --surface: 37 35 32; /* #e5ddd5 adjusted for HSL */
+    --foreground: 0 0% 100%; /* #ffffff */
+    --text-secondary: 0 0% 100% / 0.6; /* rgba(255, 255, 255, 0.6) */
+    --text-tertiary: 0 0% 100% / 0.4; /* rgba(255, 255, 255, 0.4) */
 
-    --card: 0 0% 10%;
+    /* Aurora Theme */
+    --aurora-primary: 233 81% 60%; /* #4361ee */
+    --aurora-secondary: 283 86% 45%; /* #7209b7 */
+    --aurora-accent: 142 71% 45%; /* #22c55e */
+
+    /* Forest Theme */
+    --forest-primary: 154 42% 29%; /* #2d6a4f */
+    --forest-secondary: 154 42% 42%; /* #40916c */
+    --forest-accent: 46 100% 50%; /* #ffb700 */
+
+    /* Sunset Theme */
+    --sunset-primary: 336 91% 63%; /* #f72585 */
+    --sunset-secondary: 32 100% 50%; /* #ff9e00 */
+    --sunset-accent: 283 86% 45%; /* #7209b7 */
+
+    /* Ocean Theme */
+    --ocean-primary: 194 100% 39%; /* #0096c7 */
+    --ocean-secondary: 188 100% 42%; /* #00b4d8 */
+    --ocean-accent: 0 85% 68%; /* #ff6b6b */
+
+    /* Status Colors */
+    --error: 348 100% 50%; /* #ff0033 */
+    --success: 142 71% 45%; /* #22c55e */
+    --warning: 38 92% 50%; /* #f59e0b */
+    --info: 221 83% 53%; /* #3b82f6 */
+    --offline: 220 13% 28%; /* #4b5563 */
+
+    /* Default theme colors (Aurora) */
+    --primary: var(--aurora-primary);
+    --primary-foreground: 0 0% 100%;
+    --secondary: var(--aurora-secondary);
+    --secondary-foreground: 0 0% 100%;
+    --accent: var(--aurora-accent);
+    --accent-foreground: 0 0% 100%;
+
+    /* Card and UI */
+    --card: 0 0% 10% / 0.4;
     --card-foreground: 0 0% 100%;
-
     --popover: 0 0% 8%;
     --popover-foreground: 0 0% 100%;
-
-    /* Primary Green - #52B788 */
-    --primary: 146 40% 53%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Dark Green - #2D6A4F */
-    --secondary: 146 42% 29%;
-    --secondary-foreground: 0 0% 100%;
-
-    /* Light Green - #74C69D */
-    --accent: 146 33% 61%;
-    --accent-foreground: 0 0% 10%;
-
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 60%;
-
-    /* Error - #FF0033 */
-    --destructive: 348 100% 50%;
+    --destructive: var(--error);
     --destructive-foreground: 0 0% 100%;
 
-    /* Warning - #F59E0B */
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 10%;
+    --border: 0 0% 100% / 0.05;
+    --input: 0 0% 12%;
+    --ring: var(--primary);
 
-    /* Success uses Primary Green */
-    --success: 146 40% 53%;
-    --success-foreground: 0 0% 100%;
+    /* Gradients */
+    --gradient-aurora: linear-gradient(135deg, hsl(var(--aurora-primary)), hsl(var(--aurora-secondary)), hsl(var(--aurora-accent)));
+    --gradient-forest: linear-gradient(135deg, hsl(var(--forest-primary)), hsl(var(--forest-secondary)), hsl(var(--forest-accent)));
+    --gradient-sunset: linear-gradient(135deg, hsl(var(--sunset-primary)), hsl(var(--sunset-secondary)), hsl(var(--sunset-accent)));
+    --gradient-ocean: linear-gradient(135deg, hsl(var(--ocean-primary)), hsl(var(--ocean-secondary)), hsl(var(--ocean-accent)));
 
-    --border: 0 0% 20%;
-    --input: 0 0% 15%;
-    --ring: 146 40% 53%;
-
-    /* Berget AI Brand Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(0 0% 10%), hsl(146 42% 29% / 0.2));
-    --gradient-brand: linear-gradient(135deg, hsl(146 40% 53%), hsl(146 33% 61%));
-    --gradient-dark: linear-gradient(180deg, hsl(0 0% 10%), hsl(146 42% 29% / 0.1));
+    /* Transitions */
+    --transition-standard: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-quick: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* Shadows with brand colors */
-    --shadow-brand: 0 10px 40px hsl(146 40% 53% / 0.15);
-    --shadow-elegant: 0 8px 32px hsl(0 0% 0% / 0.3);
-    
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
+    /* Sidebar */
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
-    /* Dark theme maintains Berget AI brand consistency */
-    --background: 0 0% 6%;
-    --foreground: 0 0% 100%;
+  /* Theme variants */
+  .theme-forest {
+    --primary: var(--forest-primary);
+    --secondary: var(--forest-secondary);
+    --accent: var(--forest-accent);
+  }
 
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 100%;
+  .theme-sunset {
+    --primary: var(--sunset-primary);
+    --secondary: var(--sunset-secondary);
+    --accent: var(--sunset-accent);
+  }
 
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 100%;
-
-    --primary: 146 40% 53%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 146 42% 29%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 60%;
-
-    --accent: 146 33% 61%;
-    --accent-foreground: 0 0% 10%;
-
-    --destructive: 348 100% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 15%;
-    --input: 0 0% 12%;
-    --ring: 146 40% 53%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+  .theme-ocean {
+    --primary: var(--ocean-primary);
+    --secondary: var(--ocean-secondary);
+    --accent: var(--ocean-accent);
   }
 }
 
@@ -128,26 +112,32 @@ Background: #1A1A1A, Warning: #F59E0B, Error: #FF0033
   }
 
   body {
-    @apply bg-background text-foreground font-inter;
-    background-image: var(--gradient-primary);
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv02';
+    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    background-image: 
+      linear-gradient(to bottom, rgba(229, 221, 213, 0.02) 1px, transparent 1px),
+      linear-gradient(to right, rgba(229, 221, 213, 0.02) 1px, transparent 1px);
+    background-size: 24px 24px;
     background-attachment: fixed;
   }
 
-  /* Berget AI Typography Scale */
+  /* Typography Scale */
   h1 {
-    @apply text-4xl font-semibold tracking-tight;
+    @apply text-4xl font-medium tracking-tight; /* 2.25rem / 36px */
   }
 
   h2 {
-    @apply text-3xl font-semibold tracking-tight;
+    @apply text-2xl font-medium tracking-tight; /* 1.5rem / 24px */
   }
 
   h3 {
-    @apply text-2xl font-medium tracking-tight;
+    @apply text-xl font-medium tracking-tight; /* 1.25rem / 20px */
   }
 
   h4 {
-    @apply text-xl font-medium tracking-tight;
+    @apply text-lg font-medium tracking-tight;
   }
 
   /* Icon consistency - always white for UI clarity */
@@ -155,12 +145,68 @@ Background: #1A1A1A, Warning: #F59E0B, Error: #FF0033
     @apply text-foreground;
   }
 
-  /* Brand gradient backgrounds */
-  .bg-brand-gradient {
-    background: var(--gradient-brand);
+  /* Status LED indicators */
+  .led-indicator {
+    @apply relative inline-block w-3 h-3 rounded-full;
   }
 
-  .bg-dark-gradient {
-    background: var(--gradient-dark);
+  .led-error {
+    background: hsl(var(--error));
+    box-shadow: 0 0 6px hsl(var(--error) / 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .led-success {
+    background: hsl(var(--success));
+    box-shadow: 0 0 6px hsl(var(--success) / 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  .led-offline {
+    background: hsl(var(--offline));
+    box-shadow: 0 0 6px hsl(var(--offline) / 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+
+  /* Content cards */
+  .content-card {
+    @apply bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6;
+    transition: var(--transition-smooth);
+  }
+
+  .content-card:hover {
+    @apply border-border/20 -translate-y-0.5;
+  }
+
+  /* Theme gradients */
+  .bg-gradient-aurora {
+    background: var(--gradient-aurora);
+  }
+
+  .bg-gradient-forest {
+    background: var(--gradient-forest);
+  }
+
+  .bg-gradient-sunset {
+    background: var(--gradient-sunset);
+  }
+
+  .bg-gradient-ocean {
+    background: var(--gradient-ocean);
+  }
+
+  /* Bokeh effect */
+  .bokeh {
+    @apply absolute inset-0 overflow-hidden pointer-events-none opacity-30;
+    filter: blur(80px);
+  }
+
+  .bokeh-circle {
+    @apply absolute rounded-full;
+    animation: float 20s infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(10px, 10px); }
+    50% { transform: translate(-5px, 15px); }
+    75% { transform: translate(-15px, -5px); }
   }
 }
