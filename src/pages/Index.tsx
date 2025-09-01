@@ -1,13 +1,10 @@
 import { useState } from 'react';
 import ApiKeyInput from '../components/ApiKeyInput';
 import TestMatrix from '../components/TestMatrix';
-import Sidebar from '../components/Sidebar';
-import Dashboard from '../components/Dashboard';
 
 const Index = () => {
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeView, setActiveView] = useState('overview');
 
   const handleApiKeySubmit = async (key: string) => {
     setIsLoading(true);
@@ -23,10 +20,6 @@ const Index = () => {
     setApiKey(null);
   };
 
-  const handleSidebarItemClick = (item: string) => {
-    setActiveView(item);
-  };
-
   if (!apiKey) {
     return (
       <ApiKeyInput 
@@ -36,34 +29,11 @@ const Index = () => {
     );
   }
 
-  const renderMainContent = () => {
-    switch (activeView) {
-      case 'models':
-        return (
-          <TestMatrix 
-            apiKey={apiKey} 
-            onLogout={handleLogout}
-          />
-        );
-      case 'overview':
-      default:
-        return (
-          <Dashboard 
-            username="Christian Stage 14"
-            onLogout={handleLogout}
-          />
-        );
-    }
-  };
-
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar 
-        activeItem={activeView}
-        onItemClick={handleSidebarItemClick}
-      />
-      {renderMainContent()}
-    </div>
+    <TestMatrix 
+      apiKey={apiKey} 
+      onLogout={handleLogout}
+    />
   );
 };
 
