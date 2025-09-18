@@ -213,12 +213,21 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     setPopoverCloseCount(prev => new Map(prev.set(testKey, newCount)));
     
     if (newCount === 2) {
-      // Reset counter and retry test
+      // Reset counter and set status to testing immediately
       setPopoverCloseCount(prev => new Map(prev.set(testKey, 0)));
+      
+      // Update status to testing to show loader icon
+      setTestResults(prev => new Map(prev.set(testKey, {
+        modelId: model.id,
+        feature: feature.id,
+        status: 'testing'
+      })));
+      
       toast({
         title: "Försöker igen",
         description: `Kör om test för ${feature.name} på ${model.id}`,
       });
+      
       await runTest(model, feature);
     }
   };
