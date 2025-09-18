@@ -107,6 +107,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
   const [testResults, setTestResults] = useState<Map<string, TestResult>>(new Map());
   const [isLoadingModels, setIsLoadingModels] = useState(true);
   const [isRunningTests, setIsRunningTests] = useState(false);
+  const [popoverCloseCount, setPopoverCloseCount] = useState<Map<string, number>>(new Map());
   const { toast } = useToast();
 
   useEffect(() => {
@@ -197,10 +198,29 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
 
   const clearResults = () => {
     setTestResults(new Map());
+    setPopoverCloseCount(new Map());
     toast({
       title: "Resultat rensade",
       description: "Alla testresultat har rensats",
     });
+  };
+
+  const handlePopoverClose = async (model: Model, feature: TestFeature) => {
+    const testKey = getTestKey(model.id, feature.id);
+    const currentCount = popoverCloseCount.get(testKey) || 0;
+    const newCount = currentCount + 1;
+    
+    setPopoverCloseCount(prev => new Map(prev.set(testKey, newCount)));
+    
+    if (newCount === 2) {
+      // Reset counter and retry test
+      setPopoverCloseCount(prev => new Map(prev.set(testKey, 0)));
+      toast({
+        title: "Försöker igen",
+        description: `Kör om test för ${feature.name} på ${model.id}`,
+      });
+      await runTest(model, feature);
+    }
   };
 
   const getStatusIcon = (testKey: string) => {
@@ -348,7 +368,11 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                           <TableCell key={feature.id} className="text-center">
                             {isSupported ? (
                               result && (result.status === 'success' || result.status === 'error') ? (
-                                <Popover>
+                                <Popover onOpenChange={(open) => {
+                                  if (!open) {
+                                    handlePopoverClose(model, feature);
+                                  }
+                                }}>
                                   <PopoverTrigger asChild>
                                     <Button
                                       variant="ghost"
