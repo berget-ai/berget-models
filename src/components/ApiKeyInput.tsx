@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,9 +14,19 @@ export default function ApiKeyInput({ onApiKeySubmit, isLoading }: ApiKeyInputPr
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
 
+  // Load API key from localStorage on component mount
+  useEffect(() => {
+    const savedApiKey = localStorage.getItem('berget-ai-api-key');
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    }
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (apiKey.trim()) {
+      // Save API key to localStorage
+      localStorage.setItem('berget-ai-api-key', apiKey.trim());
       onApiKeySubmit(apiKey.trim());
     }
   };
