@@ -18,16 +18,12 @@ export default {
 			}
 		},
 		extend: {
-			fontFamily: {
-				'system': ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
-				surface: 'hsl(var(--surface))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
@@ -63,29 +59,6 @@ export default {
 				warning: {
 					DEFAULT: 'hsl(var(--warning))',
 					foreground: 'hsl(var(--warning-foreground))'
-				},
-				error: 'hsl(var(--error))',
-				info: 'hsl(var(--info))',
-				offline: 'hsl(var(--offline))',
-				aurora: {
-					primary: 'hsl(var(--aurora-primary))',
-					secondary: 'hsl(var(--aurora-secondary))',
-					accent: 'hsl(var(--aurora-accent))'
-				},
-				forest: {
-					primary: 'hsl(var(--forest-primary))',
-					secondary: 'hsl(var(--forest-secondary))',
-					accent: 'hsl(var(--forest-accent))'
-				},
-				sunset: {
-					primary: 'hsl(var(--sunset-primary))',
-					secondary: 'hsl(var(--sunset-secondary))',
-					accent: 'hsl(var(--sunset-accent))'
-				},
-				ocean: {
-					primary: 'hsl(var(--ocean-primary))',
-					secondary: 'hsl(var(--ocean-secondary))',
-					accent: 'hsl(var(--ocean-accent))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
@@ -123,11 +96,7 @@ export default {
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'float': 'float 20s infinite'
-			},
-			transitionTimingFunction: {
-				'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
 		}
 	},
