@@ -174,6 +174,14 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     }
   };
 
+  const runSingleTest = async (model: Model, feature: TestFeature) => {
+    await runTest(model, feature);
+    toast({
+      title: "Test slutfört",
+      description: `${feature.name} test för ${model.id}`,
+    });
+  };
+
   const runAllTests = async () => {
     setIsRunningTests(true);
     
@@ -395,9 +403,19 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                                     <SheetHeader>
                                       <div className="flex items-center justify-between">
                                         <SheetTitle>{feature.name} Test</SheetTitle>
-                                        <Badge variant={result.status === 'success' ? 'default' : 'destructive'}>
-                                          {result.status === 'success' ? 'Lyckades' : 'Misslyckades'}
-                                        </Badge>
+                                         <div className="flex items-center gap-2">
+                                           <Button
+                                             variant="outline"
+                                             size="sm"
+                                             onClick={() => runSingleTest(model, feature)}
+                                             disabled={testResults.get(testKey)?.status === 'testing'}
+                                           >
+                                            Försök igen
+                                          </Button>
+                                          <Badge variant={result.status === 'success' ? 'default' : 'destructive'}>
+                                            {result.status === 'success' ? 'Lyckades' : 'Misslyckades'}
+                                          </Badge>
+                                        </div>
                                       </div>
                                     </SheetHeader>
                                     
