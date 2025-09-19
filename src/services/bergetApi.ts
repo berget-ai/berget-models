@@ -1,4 +1,6 @@
 import { Model, TestDetail } from '../types/model';
+import { encodeImageToBase64 } from '../utils/imageEncoder';
+import testImage from '../assets/test-image.jpg';
 
 const BASE_URL = 'https://backend-api.berget.ai/v1';
 
@@ -297,6 +299,19 @@ export async function testStreamingSupport(model: Model, apiKey: string): Promis
 }
 
 export async function testMultimodal(model: Model, apiKey: string): Promise<TestDetail> {
+  let base64Image: string;
+  
+  try {
+    base64Image = await encodeImageToBase64(testImage);
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand: '',
+      errorCode: 'IMAGE_ENCODING_ERROR',
+      message: 'Failed to encode test image'
+    };
+  }
+
   const requestBody = {
     model: model.id,
     messages: [
@@ -305,12 +320,12 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
         content: [
           {
             type: 'text',
-            text: 'What do you see in this image?'
+            text: 'What do you see in this image? Please describe it briefly.'
           },
           {
             type: 'image_url',
             image_url: {
-              url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+              url: `data:image/jpeg;base64,${base64Image}`
             }
           }
         ]
