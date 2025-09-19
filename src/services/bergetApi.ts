@@ -84,7 +84,23 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
     });
 
     const data = await response.json();
-    const success = response.ok && data.choices?.[0]?.message?.tool_calls?.length > 0;
+    
+    // Check for standard tool_calls format
+    const hasToolCalls = data.choices?.[0]?.message?.tool_calls?.length > 0;
+    
+    // Check for content-based tool calls format (some models return JSON in content)
+    let hasContentToolCalls = false;
+    try {
+      const content = data.choices?.[0]?.message?.content;
+      if (content && typeof content === 'string') {
+        const parsed = JSON.parse(content);
+        hasContentToolCalls = Array.isArray(parsed) && parsed.length > 0 && parsed[0].name && parsed[0].arguments;
+      }
+    } catch {
+      // Not valid JSON, ignore
+    }
+    
+    const success = response.ok && (hasToolCalls || hasContentToolCalls);
     
     return {
       success,
