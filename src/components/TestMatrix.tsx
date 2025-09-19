@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { 
   Table, 
   TableBody, 
@@ -377,12 +377,12 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                           <TableCell key={feature.id} className="text-center">
                             {isSupported ? (
                               result && (result.status === 'success' || result.status === 'error') ? (
-                                <Popover onOpenChange={(open) => {
+                                <Drawer onOpenChange={(open) => {
                                   if (!open) {
                                     handlePopoverClose(model, feature);
                                   }
                                 }}>
-                                  <PopoverTrigger asChild>
+                                  <DrawerTrigger asChild>
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -390,16 +390,18 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                                     >
                                       {getStatusIcon(testKey)}
                                     </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-80" align="center">
-                                    <div className="space-y-4">
+                                  </DrawerTrigger>
+                                  <DrawerContent className="max-h-[85vh]">
+                                    <DrawerHeader>
                                       <div className="flex items-center justify-between">
-                                        <h4 className="font-semibold">{feature.name} Test</h4>
+                                        <DrawerTitle>{feature.name} Test</DrawerTitle>
                                         <Badge variant={result.status === 'success' ? 'default' : 'destructive'}>
                                           {result.status === 'success' ? 'Lyckades' : 'Misslyckades'}
                                         </Badge>
                                       </div>
-                                      
+                                    </DrawerHeader>
+                                    
+                                    <div className="px-6 pb-6 space-y-4 overflow-y-auto">
                                       <div className="text-sm text-muted-foreground">
                                         <strong>Modell:</strong> {model.id}
                                       </div>
@@ -452,8 +454,8 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                                         </div>
                                       )}
                                     </div>
-                                  </PopoverContent>
-                                </Popover>
+                                  </DrawerContent>
+                                </Drawer>
                               ) : (
                                 <Button
                                   variant="ghost"
