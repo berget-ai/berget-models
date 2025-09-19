@@ -40,7 +40,7 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
     messages: [
       {
         role: 'user',
-        content: 'What is the weather like today?'
+        content: 'What is the weather like today in Stockholm?'
       }
     ],
     tools: [
