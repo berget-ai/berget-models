@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { 
   Table, 
   TableBody, 
@@ -377,12 +377,12 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                           <TableCell key={feature.id} className="text-center">
                             {isSupported ? (
                               result && (result.status === 'success' || result.status === 'error') ? (
-                                <Drawer onOpenChange={(open) => {
+                                <Sheet onOpenChange={(open) => {
                                   if (!open) {
                                     handlePopoverClose(model, feature);
                                   }
                                 }}>
-                                  <DrawerTrigger asChild>
+                                  <SheetTrigger asChild>
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -390,18 +390,18 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                                     >
                                       {getStatusIcon(testKey)}
                                     </Button>
-                                  </DrawerTrigger>
-                                  <DrawerContent className="max-h-[85vh]">
-                                    <DrawerHeader>
+                                  </SheetTrigger>
+                                  <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+                                    <SheetHeader>
                                       <div className="flex items-center justify-between">
-                                        <DrawerTitle>{feature.name} Test</DrawerTitle>
+                                        <SheetTitle>{feature.name} Test</SheetTitle>
                                         <Badge variant={result.status === 'success' ? 'default' : 'destructive'}>
                                           {result.status === 'success' ? 'Lyckades' : 'Misslyckades'}
                                         </Badge>
                                       </div>
-                                    </DrawerHeader>
+                                    </SheetHeader>
                                     
-                                    <div className="px-6 pb-6 space-y-4 overflow-y-auto">
+                                    <div className="mt-6 space-y-4 overflow-y-auto">
                                       <div className="text-sm text-muted-foreground">
                                         <strong>Modell:</strong> {model.id}
                                       </div>
@@ -454,8 +454,8 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                                         </div>
                                       )}
                                     </div>
-                                  </DrawerContent>
-                                </Drawer>
+                                  </SheetContent>
+                                </Sheet>
                               ) : (
                                 <Button
                                   variant="ghost"
