@@ -109,11 +109,11 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<Tes
     messages: [
       {
         role: 'user',
-        content: 'Return a JSON object with a "test" field set to true'
+        content: 'Please return a valid JSON object with exactly one field called "test" that has the boolean value true. Your response should be only the JSON object, nothing else.'
       }
     ],
     response_format: { type: 'json_object' },
-    max_tokens: 50
+    max_tokens: 100
   };
 
   const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
