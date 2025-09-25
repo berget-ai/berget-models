@@ -344,9 +344,9 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
           <CardContent className="p-0">
             <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
               <Table>
-                <TableHeader className="sticky top-0 z-20 bg-card border-b border-border/50 shadow-sm">
+                <TableHeader className="sticky top-0 z-10 bg-card border-b border-border/50 shadow-sm">
                   <TableRow className="border-border/50 hover:bg-transparent">
-                    <TableHead className="font-semibold text-foreground min-w-[200px] bg-card sticky left-0 z-30 border-r border-border/30">
+                    <TableHead className="font-semibold text-foreground min-w-[200px] bg-card">
                       Modell
                     </TableHead>
                     {TEST_FEATURES.map((feature) => (
@@ -365,7 +365,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                       key={model.id} 
                       className="border-border/30 hover:bg-muted/30 transition-colors"
                     >
-                      <TableCell className="font-medium sticky left-0 z-10 bg-card border-r border-border/30">
+                      <TableCell className="font-medium">
                         <div className="flex items-center space-x-2">
                           <Zap className="h-4 w-4 text-primary" />
                           <div>
