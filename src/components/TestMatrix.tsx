@@ -342,15 +342,15 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
         {/* Test Matrix */}
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
               <Table>
-                <TableHeader className="sticky top-0 z-10 bg-background">
-                  <TableRow className="border-border/50">
-                    <TableHead className="font-semibold text-foreground min-w-[200px] bg-background">
+                <TableHeader className="sticky top-0 z-20 bg-card border-b border-border/50 shadow-sm">
+                  <TableRow className="border-border/50 hover:bg-transparent">
+                    <TableHead className="font-semibold text-foreground min-w-[200px] bg-card sticky left-0 z-30 border-r border-border/30">
                       Modell
                     </TableHead>
                     {TEST_FEATURES.map((feature) => (
-                      <TableHead key={feature.id} className="text-center min-w-[120px] bg-background">
+                      <TableHead key={feature.id} className="text-center min-w-[120px] bg-card">
                         <div className="flex flex-col items-center space-y-1">
                           <span className="font-semibold text-foreground">{feature.name}</span>
                           <span className="text-xs text-muted-foreground">{feature.description}</span>
@@ -365,7 +365,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                       key={model.id} 
                       className="border-border/30 hover:bg-muted/30 transition-colors"
                     >
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium sticky left-0 z-20 bg-card border-r border-border/30">
                         <div className="flex items-center space-x-2">
                           <Zap className="h-4 w-4 text-primary" />
                           <div>
