@@ -365,7 +365,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                       key={model.id} 
                       className="border-border/30 hover:bg-muted/30 transition-colors"
                     >
-                      <TableCell className="font-medium sticky left-0 z-20 bg-card border-r border-border/30">
+                      <TableCell className="font-medium sticky left-0 z-10 bg-card border-r border-border/30">
                         <div className="flex items-center space-x-2">
                           <Zap className="h-4 w-4 text-primary" />
                           <div>
