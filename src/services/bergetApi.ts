@@ -520,7 +520,12 @@ export async function testSpeechToText(model: Model, apiKey: string): Promise<Te
 export async function testResponses(model: Model, apiKey: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
-    prompt: 'Hello, please respond with "Test successful"',
+    messages: [
+      {
+        role: 'user',
+        content: 'Hello, please respond with "Test successful"'
+      }
+    ],
     max_tokens: 20
   };
 
@@ -540,7 +545,7 @@ export async function testResponses(model: Model, apiKey: string): Promise<TestD
     });
 
     const data = await response.json();
-    const success = response.ok && data.completion?.includes('Test successful');
+    const success = response.ok && data.choices?.[0]?.message?.content?.includes('Test successful');
     
     return {
       success,
