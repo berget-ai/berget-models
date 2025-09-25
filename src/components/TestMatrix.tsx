@@ -34,7 +34,8 @@ import {
   testMultimodal,
   testEmbedding,
   testReranking,
-  testSpeechToText
+  testSpeechToText,
+  testResponses
 } from '../services/bergetApi';
 import { useToast } from '@/hooks/use-toast';
 
@@ -99,6 +100,13 @@ const TEST_FEATURES: TestFeature[] = [
     description: 'Audio transkription',
     testFunction: testSpeechToText,
     supportedTypes: ['speech-to-text']
+  },
+  {
+    id: 'responses',
+    name: 'Responses API',
+    description: 'Legacy /v1/responses endpoint',
+    testFunction: testResponses,
+    supportedTypes: ['chat']
   }
 ];
 

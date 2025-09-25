@@ -516,3 +516,45 @@ export async function testSpeechToText(model: Model, apiKey: string): Promise<Te
     };
   }
 }
+
+export async function testResponses(model: Model, apiKey: string): Promise<TestDetail> {
+  const requestBody = {
+    model: model.id,
+    prompt: 'Hello, please respond with "Test successful"',
+    max_tokens: 20
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/responses" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
+  try {
+    const response = await fetch(`${BASE_URL}/responses`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+    const success = response.ok && data.completion?.includes('Test successful');
+    
+    return {
+      success,
+      curlCommand,
+      response: data,
+      errorCode: response.ok ? undefined : response.status.toString(),
+      message: success ? 'Responses API test successful' : 'Model did not respond correctly'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
