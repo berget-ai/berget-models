@@ -342,15 +342,15 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
         {/* Test Matrix */}
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div className="max-h-[70vh] overflow-auto">
               <Table>
-                <TableHeader>
-                  <TableRow className="border-border/50">
-                    <TableHead className="font-semibold text-foreground min-w-[200px]">
+                <TableHeader className="sticky top-0 z-10">
+                  <TableRow className="border-border/50 bg-card">
+                    <TableHead className="font-semibold text-foreground min-w-[200px] bg-card">
                       Modell
                     </TableHead>
                     {TEST_FEATURES.map((feature) => (
-                      <TableHead key={feature.id} className="text-center min-w-[120px]">
+                      <TableHead key={feature.id} className="text-center min-w-[120px] bg-card">
                         <div className="flex flex-col items-center space-y-1">
                           <span className="font-semibold text-foreground">{feature.name}</span>
                           <span className="text-xs text-muted-foreground">{feature.description}</span>
