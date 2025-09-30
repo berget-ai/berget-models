@@ -2,7 +2,7 @@ import { Model, TestDetail } from '../types/model';
 import { encodeImageToBase64 } from '../utils/imageEncoder';
 import testImage from '../assets/test-image.jpg';
 
-const BASE_URL = 'https://backend-api.berget.ai/v1';
+const BASE_URL = 'https://api.berget.ai/v1';
 
 export function getModelType(modelId: string): 'chat' | 'embedding' | 'rerank' | 'speech-to-text' {
   const id = modelId.toLowerCase();
