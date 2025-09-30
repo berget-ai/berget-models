@@ -360,7 +360,24 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {models.map((model) => (
+                  {models
+                    .sort((a, b) => {
+                      // Gruppera modeller: chat först, sedan speech, sedan utility (rerank, embedding)
+                      const typeOrder = {
+                        'chat': 1,
+                        'text': 1,
+                        'speech-to-text': 2,
+                        'rerank': 3,
+                        'embedding': 3
+                      };
+                      
+                      const aOrder = typeOrder[a.type as keyof typeof typeOrder] || 99;
+                      const bOrder = typeOrder[b.type as keyof typeof typeOrder] || 99;
+                      
+                      if (aOrder !== bOrder) return aOrder - bOrder;
+                      return a.id.localeCompare(b.id);
+                    })
+                    .map((model) => (
                     <TableRow 
                       key={model.id} 
                       className="border-border/30 hover:bg-muted/30 transition-colors"
