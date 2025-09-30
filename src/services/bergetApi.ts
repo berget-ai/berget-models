@@ -65,7 +65,7 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
       }
     ],
     tool_choice: 'auto',
-    max_tokens: 200
+    max_tokens: 1000
   };
 
   const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
@@ -113,7 +113,7 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<Tes
       }
     ],
     response_format: { type: 'json_object' },
-    max_tokens: 100
+    max_tokens: 500
   };
 
   const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
@@ -181,7 +181,7 @@ export async function testBasicCompletion(model: Model, apiKey: string): Promise
         content: 'Hello, please respond with "Test successful"'
       }
     ],
-    max_tokens: 20
+    max_tokens: 500
   };
 
   const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
@@ -229,7 +229,7 @@ export async function testStreamingSupport(model: Model, apiKey: string): Promis
       }
     ],
     stream: true,
-    max_tokens: 10
+    max_tokens: 200
   };
 
   const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
@@ -331,7 +331,7 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
         ]
       }
     ],
-    max_tokens: 50
+    max_tokens: 300
   };
 
   const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
