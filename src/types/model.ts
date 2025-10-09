@@ -3,7 +3,7 @@ export interface Model {
   object: string;
   created: number;
   owned_by: string;
-  type?: 'chat' | 'embedding' | 'rerank' | 'speech-to-text';
+  type?: 'chat' | 'text' | 'embedding' | 'rerank' | 'speech-to-text';
 }
 
 export interface TestResult {

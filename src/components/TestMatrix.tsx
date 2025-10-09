@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { 
   Table, 
   TableBody, 
@@ -204,6 +205,35 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     });
   };
 
+  const runGroupTests = async (groupType: 'chat' | 'speech-to-text' | 'utility') => {
+    setIsRunningTests(true);
+    
+    const groupModels = models.filter(model => {
+      const modelType = model.type || 'chat';
+      if (groupType === 'chat') return modelType === 'chat' || modelType === 'text';
+      if (groupType === 'speech-to-text') return modelType === 'speech-to-text';
+      if (groupType === 'utility') return modelType === 'rerank' || modelType === 'embedding';
+      return false;
+    });
+
+    for (const model of groupModels) {
+      const relevantFeatures = TEST_FEATURES.filter(feature => 
+        feature.supportedTypes.includes(model.type || 'chat')
+      );
+      
+      for (const feature of relevantFeatures) {
+        await runTest(model, feature);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    setIsRunningTests(false);
+    toast({
+      title: `${groupType === 'chat' ? 'Chat' : groupType === 'speech-to-text' ? 'Speech' : 'Utility'} tester slutförda`,
+      description: `Testade ${groupModels.length} modeller`,
+    });
+  };
+
   const clearResults = () => {
     setTestResults(new Map());
     setPopoverCloseCount(new Map());
@@ -268,6 +298,166 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     const total = testResults.size;
     const successful = Array.from(testResults.values()).filter(r => r.status === 'success').length;
     return total > 0 ? Math.round((successful / total) * 100) : 0;
+  };
+
+  const getModelsByType = () => {
+    const chatModels = models.filter(m => {
+      const type = m.type || 'chat';
+      return type === 'chat' || type === 'text';
+    });
+    const speechModels = models.filter(m => m.type === 'speech-to-text');
+    const utilityModels = models.filter(m => {
+      const type = m.type;
+      return type === 'rerank' || type === 'embedding';
+    });
+    
+    return { chatModels, speechModels, utilityModels };
+  };
+
+  const renderModelGroup = (groupModels: Model[], groupName: string, groupType: 'chat' | 'speech-to-text' | 'utility') => {
+    if (groupModels.length === 0) return null;
+
+    return (
+      <TableBody>
+        {groupModels
+          .sort((a, b) => a.id.localeCompare(b.id))
+          .map((model) => (
+            <TableRow 
+              key={model.id} 
+              className="border-border/30 hover:bg-muted/30 transition-colors"
+            >
+              <TableCell className="font-medium">
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <div>
+                    <div className="font-semibold text-foreground">{model.id}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {model.owned_by} • {model.type}
+                    </div>
+                  </div>
+                </div>
+              </TableCell>
+              {TEST_FEATURES.map((feature) => {
+                const isSupported = feature.supportedTypes.includes(model.type || 'chat');
+                const testKey = getTestKey(model.id, feature.id);
+                const result = testResults.get(testKey);
+                
+                return (
+                  <TableCell key={feature.id} className="text-center">
+                    {isSupported ? (
+                      result && (result.status === 'success' || result.status === 'error') ? (
+                        <Sheet onOpenChange={(open) => {
+                          if (!open) {
+                            handlePopoverClose(model, feature);
+                          }
+                        }}>
+                          <SheetTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 hover:bg-muted/50"
+                            >
+                              {getStatusIcon(testKey)}
+                            </Button>
+                          </SheetTrigger>
+                          <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+                            <SheetHeader>
+                              <div className="flex items-center justify-between">
+                                <SheetTitle>{feature.name} Test</SheetTitle>
+                                 <div className="flex items-center gap-2">
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     onClick={() => runSingleTest(model, feature)}
+                                     disabled={testResults.get(testKey)?.status === 'testing'}
+                                   >
+                                    Försök igen
+                                  </Button>
+                                  <Badge variant={result.status === 'success' ? 'default' : 'destructive'}>
+                                    {result.status === 'success' ? 'Lyckades' : 'Misslyckades'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </SheetHeader>
+                            
+                            <div className="mt-6 space-y-4 overflow-y-auto">
+                              <div className="text-sm text-muted-foreground">
+                                <strong>Modell:</strong> {model.id}
+                              </div>
+                              
+                              {result.message && (
+                                <div className="text-sm">
+                                  <strong>Meddelande:</strong> {result.message}
+                                </div>
+                              )}
+                              
+                              {result.duration && (
+                                <div className="text-sm text-muted-foreground">
+                                  <strong>Tid:</strong> {result.duration}ms
+                                </div>
+                              )}
+                              
+                              {result.errorCode && (
+                                <div className="text-sm text-destructive">
+                                  <strong>Felkod:</strong> {result.errorCode}
+                                </div>
+                              )}
+                              
+                              {result.curlCommand && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <strong className="text-sm">cURL kommando:</strong>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => copyToClipboard(result.curlCommand!)}
+                                      className="h-6 px-2"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                  <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
+                                    {result.curlCommand}
+                                  </pre>
+                                </div>
+                              )}
+                              
+                              {result.response && (
+                                <div className="space-y-2">
+                                  <strong className="text-sm">Svar:</strong>
+                                  <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-h-32">
+                                    {typeof result.response === 'string' 
+                                      ? result.response 
+                                      : JSON.stringify(result.response, null, 2)}
+                                  </pre>
+                                </div>
+                              )}
+                            </div>
+                          </SheetContent>
+                        </Sheet>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => runTest(model, feature)}
+                          disabled={isRunningTests}
+                          className="h-8 w-8 p-0 hover:bg-muted/50"
+                        >
+                          {getStatusIcon(testKey)}
+                        </Button>
+                      )
+                    ) : (
+                      <div className="h-8 w-8 flex items-center justify-center">
+                        <Minus className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    )}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          ))}
+      </TableBody>
+    );
   };
 
   if (isLoadingModels) {
@@ -341,180 +531,164 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
 
         {/* Test Matrix */}
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
-          <CardContent className="p-0">
-            <div className="max-h-[70vh] overflow-auto relative">
-              <Table>
-                <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
-                      Modell
-                    </TableHead>
-                    {TEST_FEATURES.map((feature) => (
-                      <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
-                        <div className="flex flex-col items-center space-y-1">
-                          <span className="font-semibold text-foreground">{feature.name}</span>
-                          <span className="text-xs text-muted-foreground">{feature.description}</span>
-                        </div>
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {models
-                    .sort((a, b) => {
-                      // Gruppera modeller: chat först, sedan speech, sedan utility (rerank, embedding)
-                      const typeOrder = {
-                        'chat': 1,
-                        'text': 1,
-                        'speech-to-text': 2,
-                        'rerank': 3,
-                        'embedding': 3
-                      };
-                      
-                      const aOrder = typeOrder[a.type as keyof typeof typeOrder] || 99;
-                      const bOrder = typeOrder[b.type as keyof typeof typeOrder] || 99;
-                      
-                      if (aOrder !== bOrder) return aOrder - bOrder;
-                      return a.id.localeCompare(b.id);
-                    })
-                    .map((model) => (
-                    <TableRow 
-                      key={model.id} 
-                      className="border-border/30 hover:bg-muted/30 transition-colors"
-                    >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center space-x-2">
-                          <Zap className="h-4 w-4 text-primary" />
-                          <div>
-                            <div className="font-semibold text-foreground">{model.id}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {model.owned_by} • {model.type}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      {TEST_FEATURES.map((feature) => {
-                        const isSupported = feature.supportedTypes.includes(model.type || 'chat');
-                        const testKey = getTestKey(model.id, feature.id);
-                        const result = testResults.get(testKey);
-                        
-                        return (
-                          <TableCell key={feature.id} className="text-center">
-                            {isSupported ? (
-                              result && (result.status === 'success' || result.status === 'error') ? (
-                                <Sheet onOpenChange={(open) => {
-                                  if (!open) {
-                                    handlePopoverClose(model, feature);
-                                  }
-                                }}>
-                                  <SheetTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 hover:bg-muted/50"
-                                    >
-                                      {getStatusIcon(testKey)}
-                                    </Button>
-                                  </SheetTrigger>
-                                  <SheetContent side="right" className="w-[400px] sm:w-[540px]">
-                                    <SheetHeader>
-                                      <div className="flex items-center justify-between">
-                                        <SheetTitle>{feature.name} Test</SheetTitle>
-                                         <div className="flex items-center gap-2">
-                                           <Button
-                                             variant="outline"
-                                             size="sm"
-                                             onClick={() => runSingleTest(model, feature)}
-                                             disabled={testResults.get(testKey)?.status === 'testing'}
-                                           >
-                                            Försök igen
-                                          </Button>
-                                          <Badge variant={result.status === 'success' ? 'default' : 'destructive'}>
-                                            {result.status === 'success' ? 'Lyckades' : 'Misslyckades'}
-                                          </Badge>
-                                        </div>
-                                      </div>
-                                    </SheetHeader>
-                                    
-                                    <div className="mt-6 space-y-4 overflow-y-auto">
-                                      <div className="text-sm text-muted-foreground">
-                                        <strong>Modell:</strong> {model.id}
-                                      </div>
-                                      
-                                      {result.message && (
-                                        <div className="text-sm">
-                                          <strong>Meddelande:</strong> {result.message}
-                                        </div>
-                                      )}
-                                      
-                                      {result.duration && (
-                                        <div className="text-sm text-muted-foreground">
-                                          <strong>Tid:</strong> {result.duration}ms
-                                        </div>
-                                      )}
-                                      
-                                      {result.errorCode && (
-                                        <div className="text-sm text-destructive">
-                                          <strong>Felkod:</strong> {result.errorCode}
-                                        </div>
-                                      )}
-                                      
-                                      {result.curlCommand && (
-                                        <div className="space-y-2">
-                                          <div className="flex items-center justify-between">
-                                            <strong className="text-sm">cURL kommando:</strong>
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={() => copyToClipboard(result.curlCommand!)}
-                                              className="h-6 px-2"
-                                            >
-                                              <Copy className="h-3 w-3" />
-                                            </Button>
-                                          </div>
-                                          <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
-                                            {result.curlCommand}
-                                          </pre>
-                                        </div>
-                                      )}
-                                      
-                                      {result.response && (
-                                        <div className="space-y-2">
-                                          <strong className="text-sm">Svar:</strong>
-                                          <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-h-32">
-                                            {typeof result.response === 'string' 
-                                              ? result.response 
-                                              : JSON.stringify(result.response, null, 2)}
-                                          </pre>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </SheetContent>
-                                </Sheet>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => runTest(model, feature)}
-                                  disabled={isRunningTests}
-                                  className="h-8 w-8 p-0 hover:bg-muted/50"
-                                >
-                                  {getStatusIcon(testKey)}
-                                </Button>
-                              )
-                            ) : (
-                              <div className="h-8 w-8 flex items-center justify-center">
-                                <Minus className="h-4 w-4 text-muted-foreground" />
-                              </div>
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+          <CardContent className="p-6">
+            <Accordion type="multiple" defaultValue={["chat", "speech", "utility"]} className="space-y-4">
+              {/* Chat Models */}
+              {getModelsByType().chatModels.length > 0 && (
+                <AccordionItem value="chat" className="border rounded-lg">
+                  <AccordionTrigger className="px-4 hover:no-underline">
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold">Chat Modeller</h3>
+                        <Badge variant="secondary">{getModelsByType().chatModels.length} modeller</Badge>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          runGroupTests('chat');
+                        }}
+                        disabled={isRunningTests}
+                        className="mr-2"
+                      >
+                        {isRunningTests ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Play className="h-4 w-4 mr-2" />
+                        )}
+                        Testa alla
+                      </Button>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="max-h-[50vh] overflow-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
+                          <TableRow className="hover:bg-transparent">
+                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
+                              Modell
+                            </TableHead>
+                            {TEST_FEATURES.map((feature) => (
+                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
+                                <div className="flex flex-col items-center space-y-1">
+                                  <span className="font-semibold text-foreground">{feature.name}</span>
+                                  <span className="text-xs text-muted-foreground">{feature.description}</span>
+                                </div>
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        {renderModelGroup(getModelsByType().chatModels, 'Chat', 'chat')}
+                      </Table>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Speech Models */}
+              {getModelsByType().speechModels.length > 0 && (
+                <AccordionItem value="speech" className="border rounded-lg">
+                  <AccordionTrigger className="px-4 hover:no-underline">
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold">Speech-to-Text Modeller</h3>
+                        <Badge variant="secondary">{getModelsByType().speechModels.length} modeller</Badge>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          runGroupTests('speech-to-text');
+                        }}
+                        disabled={isRunningTests}
+                        className="mr-2"
+                      >
+                        {isRunningTests ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Play className="h-4 w-4 mr-2" />
+                        )}
+                        Testa alla
+                      </Button>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="max-h-[50vh] overflow-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
+                          <TableRow className="hover:bg-transparent">
+                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
+                              Modell
+                            </TableHead>
+                            {TEST_FEATURES.map((feature) => (
+                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
+                                <div className="flex flex-col items-center space-y-1">
+                                  <span className="font-semibold text-foreground">{feature.name}</span>
+                                  <span className="text-xs text-muted-foreground">{feature.description}</span>
+                                </div>
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        {renderModelGroup(getModelsByType().speechModels, 'Speech', 'speech-to-text')}
+                      </Table>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Utility Models */}
+              {getModelsByType().utilityModels.length > 0 && (
+                <AccordionItem value="utility" className="border rounded-lg">
+                  <AccordionTrigger className="px-4 hover:no-underline">
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold">Utility Modeller (Rerank & Embedding)</h3>
+                        <Badge variant="secondary">{getModelsByType().utilityModels.length} modeller</Badge>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          runGroupTests('utility');
+                        }}
+                        disabled={isRunningTests}
+                        className="mr-2"
+                      >
+                        {isRunningTests ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Play className="h-4 w-4 mr-2" />
+                        )}
+                        Testa alla
+                      </Button>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="max-h-[50vh] overflow-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
+                          <TableRow className="hover:bg-transparent">
+                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
+                              Modell
+                            </TableHead>
+                            {TEST_FEATURES.map((feature) => (
+                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
+                                <div className="flex flex-col items-center space-y-1">
+                                  <span className="font-semibold text-foreground">{feature.name}</span>
+                                  <span className="text-xs text-muted-foreground">{feature.description}</span>
+                                </div>
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        {renderModelGroup(getModelsByType().utilityModels, 'Utility', 'utility')}
+                      </Table>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+            </Accordion>
           </CardContent>
         </Card>
 
