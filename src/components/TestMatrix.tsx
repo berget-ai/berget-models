@@ -561,7 +561,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div className="max-h-[50vh] overflow-auto">
+                    <div className="overflow-auto">
                       <Table>
                         <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
                           <TableRow className="hover:bg-transparent">
@@ -613,7 +613,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div className="max-h-[50vh] overflow-auto">
+                    <div className="overflow-auto">
                       <Table>
                         <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
                           <TableRow className="hover:bg-transparent">
@@ -665,7 +665,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div className="max-h-[50vh] overflow-auto">
+                    <div className="overflow-auto">
                       <Table>
                         <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
                           <TableRow className="hover:bg-transparent">
