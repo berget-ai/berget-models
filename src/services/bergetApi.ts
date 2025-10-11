@@ -69,6 +69,7 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
       }
     ],
     tool_choice: 'auto',
+    stream: true,
     max_tokens: 1000
   };
 
@@ -87,30 +88,74 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
       body: JSON.stringify(requestBody),
     });
 
-    const data = await response.json();
-    
     if (!response.ok) {
+      const errorData = await response.text();
       return {
         success: false,
         curlCommand,
-        response: data,
+        response: errorData,
         errorCode: response.status.toString(),
         message: 'API request failed'
       };
     }
-    
-    // Check if the model actually called the tool
-    const toolCalls = data.choices?.[0]?.message?.tool_calls;
-    const hasToolCalls = Array.isArray(toolCalls) && toolCalls.length > 0;
-    
-    // Check if it just responded with text instead
-    const content = data.choices?.[0]?.message?.content;
-    const onlyTextResponse = !hasToolCalls && content && content.length > 0;
+
+    // Read streaming response
+    const reader = response.body?.getReader();
+    if (!reader) {
+      return {
+        success: false,
+        curlCommand,
+        message: 'No readable stream'
+      };
+    }
+
+    let hasToolCalls = false;
+    let fullResponse = '';
+    let textContent = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = new TextDecoder().decode(value);
+        fullResponse += chunk;
+
+        // Parse SSE chunks
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') continue;
+            
+            try {
+              const parsed = JSON.parse(data);
+              
+              // Check for tool calls in delta
+              if (parsed.choices?.[0]?.delta?.tool_calls) {
+                hasToolCalls = true;
+              }
+              
+              // Collect text content if any
+              if (parsed.choices?.[0]?.delta?.content) {
+                textContent += parsed.choices[0].delta.content;
+              }
+            } catch {
+              // Skip invalid JSON chunks
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    const onlyTextResponse = !hasToolCalls && textContent.length > 0;
     
     return {
       success: hasToolCalls,
       curlCommand,
-      response: data,
+      response: fullResponse,
       message: hasToolCalls 
         ? 'Tool use test successful - model called the tool' 
         : onlyTextResponse 
