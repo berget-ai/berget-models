@@ -70,7 +70,7 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
     ],
     tool_choice: 'auto',
     stream: true,
-    max_tokens: 1000
+    max_tokens: 4000
   };
 
   const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
