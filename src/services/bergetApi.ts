@@ -110,8 +110,9 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
     }
 
     let hasToolCalls = false;
-    let fullResponse = '';
     let textContent = '';
+    let toolCalls: any[] = [];
+    const toolCallsMap = new Map();
 
     try {
       while (true) {
@@ -119,7 +120,6 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
         if (done) break;
 
         const chunk = new TextDecoder().decode(value);
-        fullResponse += chunk;
 
         // Parse SSE chunks
         const lines = chunk.split('\n');
@@ -131,9 +131,30 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
             try {
               const parsed = JSON.parse(data);
               
-              // Check for tool calls in delta
+              // Build up tool calls from deltas
               if (parsed.choices?.[0]?.delta?.tool_calls) {
                 hasToolCalls = true;
+                for (const toolCall of parsed.choices[0].delta.tool_calls) {
+                  const index = toolCall.index;
+                  if (!toolCallsMap.has(index)) {
+                    toolCallsMap.set(index, {
+                      id: toolCall.id || '',
+                      type: toolCall.type || 'function',
+                      function: {
+                        name: toolCall.function?.name || '',
+                        arguments: toolCall.function?.arguments || ''
+                      }
+                    });
+                  } else {
+                    const existing = toolCallsMap.get(index);
+                    if (toolCall.function?.name) {
+                      existing.function.name += toolCall.function.name;
+                    }
+                    if (toolCall.function?.arguments) {
+                      existing.function.arguments += toolCall.function.arguments;
+                    }
+                  }
+                }
               }
               
               // Collect text content if any
@@ -150,12 +171,26 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
       reader.releaseLock();
     }
 
+    // Convert Map to array
+    toolCalls = Array.from(toolCallsMap.values());
+
+    // Build a structured response similar to non-streaming format
+    const structuredResponse = {
+      choices: [{
+        message: {
+          role: 'assistant',
+          content: textContent || null,
+          tool_calls: toolCalls.length > 0 ? toolCalls : undefined
+        }
+      }]
+    };
+
     const onlyTextResponse = !hasToolCalls && textContent.length > 0;
     
     return {
       success: hasToolCalls,
       curlCommand,
-      response: fullResponse,
+      response: structuredResponse,
       message: hasToolCalls 
         ? 'Tool use test successful - model called the tool' 
         : onlyTextResponse 
