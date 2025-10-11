@@ -41,8 +41,12 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
     model: model.id,
     messages: [
       {
+        role: 'system',
+        content: 'You are a helpful assistant. You MUST use the provided tools to answer questions. Do not respond with text explanations when a tool is available - always call the appropriate tool function.'
+      },
+      {
         role: 'user',
-        content: 'What is the weather like today in Stockholm?'
+        content: 'What is the weather like today in Stockholm? Use the get_weather tool to answer this question.'
       }
     ],
     tools: [
