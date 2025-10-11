@@ -69,7 +69,6 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
       }
     ],
     tool_choice: 'auto',
-    stream: true,
     max_tokens: 4000
   };
 
@@ -88,109 +87,26 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
       body: JSON.stringify(requestBody),
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      const errorData = await response.text();
       return {
         success: false,
         curlCommand,
-        response: errorData,
+        response: data,
         errorCode: response.status.toString(),
         message: 'API request failed'
       };
     }
-
-    // Read streaming response
-    const reader = response.body?.getReader();
-    if (!reader) {
-      return {
-        success: false,
-        curlCommand,
-        message: 'No readable stream'
-      };
-    }
-
-    let hasToolCalls = false;
-    let textContent = '';
-    let toolCalls: any[] = [];
-    const toolCallsMap = new Map();
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = new TextDecoder().decode(value);
-
-        // Parse SSE chunks
-        const lines = chunk.split('\n');
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') continue;
-            
-            try {
-              const parsed = JSON.parse(data);
-              
-              // Build up tool calls from deltas
-              if (parsed.choices?.[0]?.delta?.tool_calls) {
-                hasToolCalls = true;
-                for (const toolCall of parsed.choices[0].delta.tool_calls) {
-                  const index = toolCall.index;
-                  if (!toolCallsMap.has(index)) {
-                    toolCallsMap.set(index, {
-                      id: toolCall.id || '',
-                      type: toolCall.type || 'function',
-                      function: {
-                        name: toolCall.function?.name || '',
-                        arguments: toolCall.function?.arguments || ''
-                      }
-                    });
-                  } else {
-                    const existing = toolCallsMap.get(index);
-                    if (toolCall.function?.name) {
-                      existing.function.name += toolCall.function.name;
-                    }
-                    if (toolCall.function?.arguments) {
-                      existing.function.arguments += toolCall.function.arguments;
-                    }
-                  }
-                }
-              }
-              
-              // Collect text content if any
-              if (parsed.choices?.[0]?.delta?.content) {
-                textContent += parsed.choices[0].delta.content;
-              }
-            } catch {
-              // Skip invalid JSON chunks
-            }
-          }
-        }
-      }
-    } finally {
-      reader.releaseLock();
-    }
-
-    // Convert Map to array
-    toolCalls = Array.from(toolCallsMap.values());
-
-    // Build a structured response similar to non-streaming format
-    const structuredResponse = {
-      choices: [{
-        message: {
-          role: 'assistant',
-          content: textContent || null,
-          tool_calls: toolCalls.length > 0 ? toolCalls : undefined
-        }
-      }]
-    };
-
+    
+    const hasToolCalls = data.choices?.[0]?.message?.tool_calls?.length > 0;
+    const textContent = data.choices?.[0]?.message?.content || '';
     const onlyTextResponse = !hasToolCalls && textContent.length > 0;
     
     return {
       success: hasToolCalls,
       curlCommand,
-      response: structuredResponse,
+      response: data,
       message: hasToolCalls 
         ? 'Tool use test successful - model called the tool' 
         : onlyTextResponse 
