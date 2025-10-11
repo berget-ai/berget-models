@@ -84,14 +84,34 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
     });
 
     const data = await response.json();
-    const success = response.ok && data.choices?.[0]?.message?.tool_calls?.length > 0;
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        curlCommand,
+        response: data,
+        errorCode: response.status.toString(),
+        message: 'API request failed'
+      };
+    }
+    
+    // Check if the model actually called the tool
+    const toolCalls = data.choices?.[0]?.message?.tool_calls;
+    const hasToolCalls = Array.isArray(toolCalls) && toolCalls.length > 0;
+    
+    // Check if it just responded with text instead
+    const content = data.choices?.[0]?.message?.content;
+    const onlyTextResponse = !hasToolCalls && content && content.length > 0;
     
     return {
-      success,
+      success: hasToolCalls,
       curlCommand,
       response: data,
-      errorCode: response.ok ? undefined : response.status.toString(),
-      message: success ? 'Tool use test successful' : 'Model did not use tools'
+      message: hasToolCalls 
+        ? 'Tool use test successful - model called the tool' 
+        : onlyTextResponse 
+          ? 'Model responded with text instead of using the tool'
+          : 'Model did not use tools'
     };
   } catch (error) {
     return {
