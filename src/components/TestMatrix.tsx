@@ -29,7 +29,8 @@ import { Model, TestResult, TestFeature, TestDetail } from '../types/model';
 import { 
   fetchModels, 
   testToolUse, 
-  testJsonSupport, 
+  testJsonSupport,
+  testJsonSchema, 
   testBasicCompletion,
   testStreamingSupport,
   testMultimodal,
@@ -64,6 +65,13 @@ const TEST_FEATURES: TestFeature[] = [
     name: 'JSON Mode',
     description: 'Strukturerad JSON output',
     testFunction: testJsonSupport,
+    supportedTypes: ['chat']
+  },
+  {
+    id: 'json_schema',
+    name: 'JSON Schema',
+    description: 'Strict schema validation',
+    testFunction: testJsonSchema,
     supportedTypes: ['chat']
   },
   {

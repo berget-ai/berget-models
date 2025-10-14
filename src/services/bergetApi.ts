@@ -192,6 +192,99 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<Tes
   }
 }
 
+export async function testJsonSchema(model: Model, apiKey: string): Promise<TestDetail> {
+  const schema = {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      age: { type: 'number' },
+      email: { type: 'string' }
+    },
+    required: ['name', 'age', 'email'],
+    additionalProperties: false
+  };
+
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: 'user',
+        content: 'Generate a person profile with name "John Doe", age 30, and email "john@example.com". Follow the provided schema exactly.'
+      }
+    ],
+    response_format: { 
+      type: 'json_schema',
+      json_schema: {
+        name: 'person_profile',
+        strict: true,
+        schema
+      }
+    },
+    max_tokens: 500
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
+  try {
+    const response = await fetch(`${BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        curlCommand,
+        response: data,
+        errorCode: response.status.toString(),
+        message: 'API request failed'
+      };
+    }
+    
+    try {
+      const content = data.choices?.[0]?.message?.content;
+      const parsed = JSON.parse(content || '{}');
+      
+      const hasName = typeof parsed.name === 'string' && parsed.name.length > 0;
+      const hasAge = typeof parsed.age === 'number';
+      const hasEmail = typeof parsed.email === 'string' && parsed.email.length > 0;
+      const noExtraProps = Object.keys(parsed).length === 3;
+      
+      const success = hasName && hasAge && hasEmail && noExtraProps;
+      
+      return {
+        success,
+        curlCommand,
+        response: data,
+        message: success ? 'JSON schema validation successful' : 'Response does not match schema'
+      };
+    } catch {
+      return {
+        success: false,
+        curlCommand,
+        response: data,
+        message: 'Failed to parse JSON response'
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
 export async function testBasicCompletion(model: Model, apiKey: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
