@@ -356,114 +356,36 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                   <TableCell key={feature.id} className="text-center">
                     {isSupported ? (
                       result && (result.status === 'success' || result.status === 'error') ? (
-                        <Sheet onOpenChange={(open) => {
-                          if (!open) {
-                            handlePopoverClose(model, feature);
-                          }
-                        }}>
-                          <SheetTrigger asChild>
-                            {result.status === 'success' && result.tokensPerSecond ? (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 hover:bg-muted/50"
-                                    >
-                                      {getStatusIcon(testKey)}
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{result.tokensPerSecond} TPS</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            ) : (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 hover:bg-muted/50"
-                              >
-                                {getStatusIcon(testKey)}
-                              </Button>
-                            )}
-                          </SheetTrigger>
-                          <SheetContent side="right" className="w-[400px] sm:w-[540px]">
-                            <SheetHeader>
-                              <div className="flex items-center justify-between">
-                                <SheetTitle>{feature.name} Test</SheetTitle>
-                                 <div className="flex items-center gap-2">
-                                   <Button
-                                     variant="outline"
-                                     size="sm"
-                                     onClick={() => runSingleTest(model, feature)}
-                                     disabled={testResults.get(testKey)?.status === 'testing'}
-                                   >
-                                    Försök igen
-                                  </Button>
-                                  <Badge variant={result.status === 'success' ? 'default' : 'destructive'}>
-                                    {result.status === 'success' ? 'Lyckades' : 'Misslyckades'}
-                                  </Badge>
-                                </div>
-                              </div>
-                            </SheetHeader>
-                            
-                            <div className="mt-6 space-y-4 overflow-y-auto">
-                              <div className="text-sm text-muted-foreground">
-                                <strong>Modell:</strong> {model.id}
-                              </div>
-                              
-                              {result.message && (
-                                <div className="text-sm">
-                                  <strong>Meddelande:</strong> {result.message}
-                                </div>
-                              )}
-                              
-                              {result.duration && (
-                                <div className="text-sm text-muted-foreground">
-                                  <strong>Tid:</strong> {result.duration}ms
-                                </div>
-                              )}
-                              
-                              {result.errorCode && (
-                                <div className="text-sm text-destructive">
-                                  <strong>Felkod:</strong> {result.errorCode}
-                                </div>
-                              )}
-                              
-                              {result.curlCommand && (
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <strong className="text-sm">cURL kommando:</strong>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => copyToClipboard(result.curlCommand!)}
-                                      className="h-6 px-2"
-                                    >
-                                      <Copy className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                  <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
-                                    {result.curlCommand}
-                                  </pre>
-                                </div>
-                              )}
-                              
-                              {result.response && (
-                                <div className="space-y-2">
-                                  <strong className="text-sm">Svar:</strong>
-                                  <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-h-32">
-                                    {typeof result.response === 'string' 
-                                      ? result.response 
-                                      : JSON.stringify(result.response, null, 2)}
-                                  </pre>
-                                </div>
-                              )}
-                            </div>
-                          </SheetContent>
-                        </Sheet>
+                        result.status === 'success' && result.tokensPerSecond ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 hover:bg-muted/50 cursor-pointer"
+                                  onClick={() => runTest(model, feature)}
+                                  disabled={isRunningTests}
+                                >
+                                  {getStatusIcon(testKey)}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{result.tokensPerSecond} TPS</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-muted/50 cursor-pointer"
+                            onClick={() => runTest(model, feature)}
+                            disabled={isRunningTests}
+                          >
+                            {getStatusIcon(testKey)}
+                          </Button>
+                        )
                       ) : (
                         <Button
                           variant="ghost"
