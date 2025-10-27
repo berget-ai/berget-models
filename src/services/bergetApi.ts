@@ -4,6 +4,12 @@ import testImage from '../assets/test-image.jpg';
 
 const BASE_URL = 'https://api.berget.ai/v1';
 
+function calculateTPS(response: any, durationMs: number): number | undefined {
+  const completionTokens = response?.usage?.completion_tokens;
+  if (!completionTokens || durationMs === 0) return undefined;
+  return Math.round((completionTokens / durationMs) * 1000 * 10) / 10;
+}
+
 export function getModelType(modelId: string): 'chat' | 'embedding' | 'rerank' | 'speech-to-text' {
   const id = modelId.toLowerCase();
   if (id.includes('rerank') || id.includes('bge-reranker')) return 'rerank';
@@ -77,6 +83,8 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
 
+  const startTime = Date.now();
+  
   try {
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -88,6 +96,7 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
     });
 
     const data = await response.json();
+    const duration = Date.now() - startTime;
     
     if (!response.ok) {
       return {
@@ -107,6 +116,7 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
       success: hasToolCalls,
       curlCommand,
       response: data,
+      tokensPerSecond: calculateTPS(data, duration),
       message: hasToolCalls 
         ? 'Tool use test successful - model called the tool' 
         : onlyTextResponse 
@@ -141,6 +151,8 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<Tes
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
 
+  const startTime = Date.now();
+
   try {
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -152,6 +164,7 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<Tes
     });
 
     const data = await response.json();
+    const duration = Date.now() - startTime;
     
     if (!response.ok) {
       return {
@@ -172,6 +185,7 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<Tes
         success,
         curlCommand,
         response: data,
+        tokensPerSecond: calculateTPS(data, duration),
         message: success ? 'JSON response valid' : 'JSON response invalid'
       };
     } catch {
@@ -228,6 +242,8 @@ export async function testJsonSchema(model: Model, apiKey: string): Promise<Test
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
 
+  const startTime = Date.now();
+
   try {
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -239,6 +255,7 @@ export async function testJsonSchema(model: Model, apiKey: string): Promise<Test
     });
 
     const data = await response.json();
+    const duration = Date.now() - startTime;
     
     if (!response.ok) {
       return {
@@ -265,6 +282,7 @@ export async function testJsonSchema(model: Model, apiKey: string): Promise<Test
         success,
         curlCommand,
         response: data,
+        tokensPerSecond: calculateTPS(data, duration),
         message: success ? 'JSON schema validation successful' : 'Response does not match schema'
       };
     } catch {
@@ -302,6 +320,8 @@ export async function testBasicCompletion(model: Model, apiKey: string): Promise
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
 
+  const startTime = Date.now();
+
   try {
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -313,12 +333,14 @@ export async function testBasicCompletion(model: Model, apiKey: string): Promise
     });
 
     const data = await response.json();
+    const duration = Date.now() - startTime;
     const success = response.ok && data.choices?.[0]?.message?.content?.includes('Test successful');
     
     return {
       success,
       curlCommand,
       response: data,
+      tokensPerSecond: calculateTPS(data, duration),
       errorCode: response.ok ? undefined : response.status.toString(),
       message: success ? 'Basic completion test successful' : 'Model did not respond correctly'
     };
@@ -452,6 +474,8 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
 
+  const startTime = Date.now();
+
   try {
     const response = await fetch(`${BASE_URL}/chat/completions`, {
       method: 'POST',
@@ -463,12 +487,14 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
     });
 
     const data = await response.json();
+    const duration = Date.now() - startTime;
     const success = response.ok && data.choices?.[0]?.message?.content?.length > 0;
     
     return {
       success,
       curlCommand,
       response: data,
+      tokensPerSecond: calculateTPS(data, duration),
       errorCode: response.ok ? undefined : response.status.toString(),
       message: success ? 'Multimodal test successful' : 'Model did not process image'
     };

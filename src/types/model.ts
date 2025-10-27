@@ -15,6 +15,7 @@ export interface TestResult {
   curlCommand?: string;
   response?: any;
   errorCode?: string;
+  tokensPerSecond?: number;
 }
 
 export interface TestDetail {
@@ -23,6 +24,7 @@ export interface TestDetail {
   response?: any;
   errorCode?: string;
   message?: string;
+  tokensPerSecond?: number;
 }
 
 export interface TestFeature {

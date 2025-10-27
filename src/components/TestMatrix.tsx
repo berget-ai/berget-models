@@ -39,6 +39,7 @@ import {
   testSpeechToText
 } from '../services/bergetApi';
 import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TestMatrixProps {
   apiKey: string;
@@ -168,7 +169,8 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
         duration,
         curlCommand: testDetail.curlCommand,
         response: testDetail.response,
-        errorCode: testDetail.errorCode
+        errorCode: testDetail.errorCode,
+        tokensPerSecond: testDetail.tokensPerSecond
       })));
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -360,13 +362,32 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                           }
                         }}>
                           <SheetTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 hover:bg-muted/50"
-                            >
-                              {getStatusIcon(testKey)}
-                            </Button>
+                            {result.status === 'success' && result.tokensPerSecond ? (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 hover:bg-muted/50"
+                                    >
+                                      {getStatusIcon(testKey)}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{result.tokensPerSecond} TPS</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 hover:bg-muted/50"
+                              >
+                                {getStatusIcon(testKey)}
+                              </Button>
+                            )}
                           </SheetTrigger>
                           <SheetContent side="right" className="w-[400px] sm:w-[540px]">
                             <SheetHeader>
