@@ -52,7 +52,7 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
       },
       {
         role: 'user',
-        content: 'What is the weather like today in Stockholm? Use the get_weather tool to answer this question.'
+        content: 'What is the weather like today in Stockholm? Use the get_weather tool to answer this question.</think>'
       }
     ],
     tools: [
@@ -139,7 +139,7 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<Tes
     messages: [
       {
         role: 'user',
-        content: 'Please return a valid JSON object with exactly one field called "test" that has the boolean value true. Your response should be only the JSON object, nothing else.'
+        content: 'Please return a valid JSON object with exactly one field called "test" that has the boolean value true. Your response should be only the JSON object, nothing else.</think>'
       }
     ],
     response_format: { type: 'json_object' },
@@ -223,7 +223,7 @@ export async function testJsonSchema(model: Model, apiKey: string): Promise<Test
     messages: [
       {
         role: 'user',
-        content: `Generate a person profile as JSON with exactly these fields: name (string), age (number), email (string). Use: name "John Doe", age 30, email "john@example.com". Return only valid JSON with no additional fields.`
+        content: `Generate a person profile as JSON with exactly these fields: name (string), age (number), email (string). Use: name "John Doe", age 30, email "john@example.com". Return only valid JSON with no additional fields.</think>`
       }
     ],
     response_format: { 
@@ -304,7 +304,7 @@ export async function testBasicCompletion(model: Model, apiKey: string): Promise
     messages: [
       {
         role: 'user',
-        content: 'Hello, please respond with "Test successful"'
+        content: 'Hello, please respond with "Test successful"</think>'
       }
     ],
     max_tokens: 500
@@ -355,7 +355,7 @@ export async function testStreamingSupport(model: Model, apiKey: string): Promis
     messages: [
       {
         role: 'user',
-        content: 'Hello'
+        content: 'Hello</think>'
       }
     ],
     stream: true,
@@ -450,7 +450,7 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
         content: [
           {
             type: 'text',
-            text: 'What do you see in this image? Please describe it briefly.'
+            text: 'What do you see in this image? Please describe it briefly.</think>'
           },
           {
             type: 'image_url',
