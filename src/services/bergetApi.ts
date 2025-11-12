@@ -223,16 +223,11 @@ export async function testJsonSchema(model: Model, apiKey: string): Promise<Test
     messages: [
       {
         role: 'user',
-        content: 'Generate a person profile with name "John Doe", age 30, and email "john@example.com". Follow the provided schema exactly.'
+        content: `Generate a person profile as JSON with exactly these fields: name (string), age (number), email (string). Use: name "John Doe", age 30, email "john@example.com". Return only valid JSON with no additional fields.`
       }
     ],
     response_format: { 
-      type: 'json_schema',
-      json_schema: {
-        name: 'person_profile',
-        strict: true,
-        schema
-      }
+      type: 'json_object'
     },
     max_tokens: 500
   };
