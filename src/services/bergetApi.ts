@@ -483,7 +483,24 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
 
     const data = await response.json();
     const duration = Date.now() - startTime;
-    const success = response.ok && data.choices?.[0]?.message?.content?.length > 0;
+    
+    // Check if model actually saw the image (not just responded)
+    const content = data.choices?.[0]?.message?.content || '';
+    const imageNotSeenPhrases = [
+      "can't see",
+      "cannot see",
+      "not able to see",
+      "no image",
+      "not attached",
+      "nothing was attached",
+      "didn't receive",
+      "no picture",
+      "don't see"
+    ];
+    
+    const contentLower = content.toLowerCase();
+    const modelDidNotSeeImage = imageNotSeenPhrases.some(phrase => contentLower.includes(phrase));
+    const success = response.ok && content.length > 0 && !modelDidNotSeeImage;
     
     return {
       success,
@@ -491,7 +508,11 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
       response: data,
       tokensPerSecond: calculateTPS(data, duration),
       errorCode: response.ok ? undefined : response.status.toString(),
-      message: success ? 'Multimodal test successful' : 'Model did not process image'
+      message: modelDidNotSeeImage 
+        ? 'Model did not receive or process the image' 
+        : success 
+          ? 'Multimodal test successful' 
+          : 'Model did not process image'
     };
   } catch (error) {
     return {
