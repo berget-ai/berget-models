@@ -524,6 +524,97 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
   }
 }
 
+export async function testOCR(model: Model, apiKey: string): Promise<TestDetail> {
+  // Use a receipt image with tables and text for OCR testing
+  const receiptImageUrl = 'https://ofasys-multimodal-wlcb-3-toshanghai.oss-accelerate.aliyuncs.com/wpf272043/keepme/image/receipt.png';
+  
+  const requestBody = {
+    model: 'deepseek-ai/DeepSeek-OCR',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image_url',
+            image_url: {
+              url: receiptImageUrl
+            }
+          },
+          {
+            type: 'text',
+            text: 'Free OCR.</think>'
+          }
+        ]
+      }
+    ],
+    max_tokens: 2048,
+    temperature: 0.0
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
+  const startTime = Date.now();
+
+  try {
+    const response = await fetch(`${BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+    const duration = Date.now() - startTime;
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        curlCommand,
+        response: data,
+        errorCode: response.status.toString(),
+        message: 'API request failed'
+      };
+    }
+    
+    const content = data.choices?.[0]?.message?.content || '';
+    
+    // Check for OCR-specific indicators:
+    // - Contains table markup (<td>, </td>, <table>, etc.)
+    // - Contains extracted text (numbers, words)
+    // - Response is substantial (OCR output is typically verbose)
+    const hasTableMarkup = content.includes('<td>') || content.includes('</td>') || content.includes('<table>');
+    const hasSubstantialContent = content.length > 100;
+    const containsNumbers = /\d+/.test(content);
+    
+    const success = response.ok && hasSubstantialContent && (hasTableMarkup || containsNumbers);
+    
+    return {
+      success,
+      curlCommand,
+      response: data,
+      tokensPerSecond: calculateTPS(data, duration),
+      errorCode: response.ok ? undefined : response.status.toString(),
+      message: success 
+        ? `OCR test successful - extracted ${content.length} chars` 
+        : content.length === 0 
+          ? 'No OCR output received'
+          : 'OCR output may be incomplete or invalid'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
 export async function testEmbedding(model: Model, apiKey: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,

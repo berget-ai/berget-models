@@ -34,6 +34,7 @@ import {
   testBasicCompletion,
   testStreamingSupport,
   testMultimodal,
+  testOCR,
   testEmbedding,
   testReranking,
   testSpeechToText
@@ -87,6 +88,13 @@ const TEST_FEATURES: TestFeature[] = [
     name: 'Multimodal',
     description: 'Bildanalys och vision',
     testFunction: testMultimodal,
+    supportedTypes: ['chat']
+  },
+  {
+    id: 'ocr',
+    name: 'OCR',
+    description: 'DeepSeek OCR för text/tabell-extraktion',
+    testFunction: testOCR,
     supportedTypes: ['chat']
   },
   {
