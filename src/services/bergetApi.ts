@@ -10,11 +10,12 @@ function calculateTPS(response: any, durationMs: number): number | undefined {
   return Math.round((completionTokens / durationMs) * 1000 * 10) / 10;
 }
 
-export function getModelType(modelId: string): 'chat' | 'embedding' | 'rerank' | 'speech-to-text' {
+export function getModelType(modelId: string): 'chat' | 'embedding' | 'rerank' | 'speech-to-text' | 'ocr' {
   const id = modelId.toLowerCase();
   if (id.includes('rerank') || id.includes('bge-reranker')) return 'rerank';
   if (id.includes('embed') || id.includes('embedding')) return 'embedding';
   if (id.includes('whisper')) return 'speech-to-text';
+  if (id.includes('ocr')) return 'ocr';
   return 'chat';
 }
 
@@ -38,6 +39,7 @@ export async function fetchModels(apiKey: string): Promise<Model[]> {
           model.model_type === 'embedding' ? 'embedding' :
           model.model_type === 'rerank' ? 'rerank' :
           model.model_type === 'speech-to-text' ? 'speech-to-text' :
+          model.model_type === 'ocr' ? 'ocr' :
           getModelType(model.id) // fallback to old method
   }));
 }
@@ -529,7 +531,7 @@ export async function testOCR(model: Model, apiKey: string): Promise<TestDetail>
   const receiptImageUrl = 'https://ofasys-multimodal-wlcb-3-toshanghai.oss-accelerate.aliyuncs.com/wpf272043/keepme/image/receipt.png';
   
   const requestBody = {
-    model: 'deepseek-ai/DeepSeek-OCR',
+    model: model.id,
     messages: [
       {
         role: 'user',

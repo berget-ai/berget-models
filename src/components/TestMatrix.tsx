@@ -93,9 +93,9 @@ const TEST_FEATURES: TestFeature[] = [
   {
     id: 'ocr',
     name: 'OCR',
-    description: 'DeepSeek OCR för text/tabell-extraktion',
+    description: 'Text/tabell-extraktion från bilder',
     testFunction: testOCR,
-    supportedTypes: ['chat']
+    supportedTypes: ['ocr']
   },
   {
     id: 'embedding',
@@ -223,7 +223,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     });
   };
 
-  const runGroupTests = async (groupType: 'chat' | 'speech-to-text' | 'utility') => {
+  const runGroupTests = async (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
     setIsRunningTests(true);
     
     const groupModels = models.filter(model => {
@@ -231,6 +231,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
       if (groupType === 'chat') return modelType === 'chat' || modelType === 'text';
       if (groupType === 'speech-to-text') return modelType === 'speech-to-text';
       if (groupType === 'utility') return modelType === 'rerank' || modelType === 'embedding';
+      if (groupType === 'ocr') return modelType === 'ocr';
       return false;
     });
 
@@ -247,7 +248,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     
     setIsRunningTests(false);
     toast({
-      title: `${groupType === 'chat' ? 'Chat' : groupType === 'speech-to-text' ? 'Speech' : 'Utility'} tester slutförda`,
+      title: `${groupType === 'chat' ? 'Chat' : groupType === 'speech-to-text' ? 'Speech' : groupType === 'ocr' ? 'OCR' : 'Utility'} tester slutförda`,
       description: `Testade ${groupModels.length} modeller`,
     });
   };
@@ -324,15 +325,16 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
       return type === 'chat' || type === 'text';
     });
     const speechModels = models.filter(m => m.type === 'speech-to-text');
+    const ocrModels = models.filter(m => m.type === 'ocr');
     const utilityModels = models.filter(m => {
       const type = m.type;
       return type === 'rerank' || type === 'embedding';
     });
     
-    return { chatModels, speechModels, utilityModels };
+    return { chatModels, speechModels, ocrModels, utilityModels };
   };
 
-  const renderModelGroup = (groupModels: Model[], groupName: string, groupType: 'chat' | 'speech-to-text' | 'utility') => {
+  const renderModelGroup = (groupModels: Model[], groupName: string, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
     if (groupModels.length === 0) return null;
 
     return (
@@ -491,7 +493,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
         {/* Test Matrix */}
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
           <CardContent className="p-6">
-            <Accordion type="multiple" defaultValue={["chat", "speech", "utility"]} className="space-y-4">
+            <Accordion type="multiple" defaultValue={["chat", "speech", "ocr", "utility"]} className="space-y-4">
               {/* Chat Models */}
               {getModelsByType().chatModels.length > 0 && (
                 <AccordionItem value="chat" className="border rounded-lg">
@@ -590,6 +592,58 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                           </TableRow>
                         </TableHeader>
                         {renderModelGroup(getModelsByType().speechModels, 'Speech', 'speech-to-text')}
+                      </Table>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* OCR Models */}
+              {getModelsByType().ocrModels.length > 0 && (
+                <AccordionItem value="ocr" className="border rounded-lg">
+                  <AccordionTrigger className="px-4 hover:no-underline">
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold">OCR Modeller</h3>
+                        <Badge variant="secondary">{getModelsByType().ocrModels.length} modeller</Badge>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          runGroupTests('ocr');
+                        }}
+                        disabled={isRunningTests}
+                        className="mr-2"
+                      >
+                        {isRunningTests ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Play className="h-4 w-4 mr-2" />
+                        )}
+                        Testa alla
+                      </Button>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="overflow-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
+                          <TableRow className="hover:bg-transparent">
+                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
+                              Modell
+                            </TableHead>
+                            {TEST_FEATURES.map((feature) => (
+                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
+                                <div className="flex flex-col items-center space-y-1">
+                                  <span className="font-semibold text-foreground">{feature.name}</span>
+                                  <span className="text-xs text-muted-foreground">{feature.description}</span>
+                                </div>
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        {renderModelGroup(getModelsByType().ocrModels, 'OCR', 'ocr')}
                       </Table>
                     </div>
                   </AccordionContent>
