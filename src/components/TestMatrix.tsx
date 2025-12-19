@@ -336,8 +336,22 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     return { chatModels, speechModels, ocrModels, utilityModels };
   };
 
+  const getFeaturesForGroupType = (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+    const typeMapping: Record<string, string[]> = {
+      'chat': ['chat'],
+      'speech-to-text': ['speech-to-text'],
+      'ocr': ['ocr'],
+      'utility': ['embedding', 'rerank']
+    };
+    const supportedTypes = typeMapping[groupType] || [];
+    return TEST_FEATURES.filter(feature => 
+      feature.supportedTypes.some(type => supportedTypes.includes(type))
+    );
+  };
+
   const renderModelGroup = (groupModels: Model[], groupName: string, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
     if (groupModels.length === 0) return null;
+    const relevantFeatures = getFeaturesForGroupType(groupType);
 
     return (
       <TableBody>
@@ -359,41 +373,34 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                   </div>
                 </div>
               </TableCell>
-              {TEST_FEATURES.map((feature) => {
-                const isSupported = feature.supportedTypes.includes(model.type || 'chat');
+              {relevantFeatures.map((feature) => {
                 const testKey = getTestKey(model.id, feature.id);
                 const result = testResults.get(testKey);
                 
                 return (
                   <TableCell key={feature.id} className="text-center">
-                    {isSupported ? (
-                      result && (result.status === 'success' || result.status === 'error') ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-muted/50 cursor-pointer"
-                          onClick={() => {
-                            setSelectedResult(result);
-                            setIsDetailOpen(true);
-                          }}
-                        >
-                          {getStatusIcon(testKey)}
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => runTest(model, feature)}
-                          disabled={isRunningTests}
-                          className="h-8 w-8 p-0 hover:bg-muted/50"
-                        >
-                          {getStatusIcon(testKey)}
-                        </Button>
-                      )
+                    {result && (result.status === 'success' || result.status === 'error') ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-muted/50 cursor-pointer"
+                        onClick={() => {
+                          setSelectedResult(result);
+                          setIsDetailOpen(true);
+                        }}
+                      >
+                        {getStatusIcon(testKey)}
+                      </Button>
                     ) : (
-                      <div className="h-8 w-8 flex items-center justify-center">
-                        <Minus className="h-4 w-4 text-muted-foreground" />
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => runTest(model, feature)}
+                        disabled={isRunningTests}
+                        className="h-8 w-8 p-0 hover:bg-muted/50"
+                      >
+                        {getStatusIcon(testKey)}
+                      </Button>
                     )}
                   </TableCell>
                 );
@@ -512,7 +519,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                             <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
                               Modell
                             </TableHead>
-                            {TEST_FEATURES.map((feature) => (
+                            {getFeaturesForGroupType('chat').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
                                   <span className="font-semibold text-foreground">{feature.name}</span>
@@ -564,7 +571,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                             <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
                               Modell
                             </TableHead>
-                            {TEST_FEATURES.map((feature) => (
+                            {getFeaturesForGroupType('speech-to-text').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
                                   <span className="font-semibold text-foreground">{feature.name}</span>
@@ -616,7 +623,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                             <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
                               Modell
                             </TableHead>
-                            {TEST_FEATURES.map((feature) => (
+                            {getFeaturesForGroupType('ocr').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
                                   <span className="font-semibold text-foreground">{feature.name}</span>
@@ -668,7 +675,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                             <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
                               Modell
                             </TableHead>
-                            {TEST_FEATURES.map((feature) => (
+                            {getFeaturesForGroupType('utility').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
                                   <span className="font-semibold text-foreground">{feature.name}</span>
