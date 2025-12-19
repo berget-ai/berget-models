@@ -126,6 +126,8 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
   const [isLoadingModels, setIsLoadingModels] = useState(true);
   const [isRunningTests, setIsRunningTests] = useState(false);
   const [popoverCloseCount, setPopoverCloseCount] = useState<Map<string, number>>(new Map());
+  const [selectedResult, setSelectedResult] = useState<TestResult | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -366,36 +368,17 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
                   <TableCell key={feature.id} className="text-center">
                     {isSupported ? (
                       result && (result.status === 'success' || result.status === 'error') ? (
-                        result.status === 'success' && result.tokensPerSecond ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 hover:bg-muted/50 cursor-pointer"
-                                  onClick={() => runTest(model, feature)}
-                                  disabled={isRunningTests}
-                                >
-                                  {getStatusIcon(testKey)}
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{result.tokensPerSecond} TPS</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 hover:bg-muted/50 cursor-pointer"
-                            onClick={() => runTest(model, feature)}
-                            disabled={isRunningTests}
-                          >
-                            {getStatusIcon(testKey)}
-                          </Button>
-                        )
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-muted/50 cursor-pointer"
+                          onClick={() => {
+                            setSelectedResult(result);
+                            setIsDetailOpen(true);
+                          }}
+                        >
+                          {getStatusIcon(testKey)}
+                        </Button>
                       ) : (
                         <Button
                           variant="ghost"
@@ -729,6 +712,140 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Result Detail Sheet */}
+      <Sheet open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <SheetContent className="w-[500px] sm:w-[600px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              {selectedResult?.status === 'success' ? (
+                <Check className="h-5 w-5 text-success" />
+              ) : (
+                <X className="h-5 w-5 text-destructive" />
+              )}
+              {selectedResult?.modelId} - {TEST_FEATURES.find(f => f.id === selectedResult?.feature)?.name}
+            </SheetTitle>
+          </SheetHeader>
+          
+          {selectedResult && (
+            <div className="mt-6 space-y-6">
+              {/* Status & Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <div className="text-xs text-muted-foreground">Status</div>
+                  <div className={`font-semibold ${selectedResult.status === 'success' ? 'text-success' : 'text-destructive'}`}>
+                    {selectedResult.status === 'success' ? 'Lyckades' : 'Misslyckades'}
+                  </div>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <div className="text-xs text-muted-foreground">Tid</div>
+                  <div className="font-semibold">{selectedResult.duration}ms</div>
+                </div>
+                {selectedResult.tokensPerSecond && (
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <div className="text-xs text-muted-foreground">Tokens/sekund</div>
+                    <div className="font-semibold">{selectedResult.tokensPerSecond} TPS</div>
+                  </div>
+                )}
+                {selectedResult.errorCode && (
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <div className="text-xs text-muted-foreground">Felkod</div>
+                    <div className="font-semibold text-destructive">{selectedResult.errorCode}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Message */}
+              {selectedResult.message && (
+                <div>
+                  <div className="text-sm font-medium mb-2">Meddelande</div>
+                  <div className="p-3 rounded-lg bg-muted/50 text-sm">
+                    {selectedResult.message}
+                  </div>
+                </div>
+              )}
+
+              {/* Token Usage from Response */}
+              {selectedResult.response?.usage && (
+                <div>
+                  <div className="text-sm font-medium mb-2">Token-användning</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="p-3 rounded-lg bg-muted/50 text-center">
+                      <div className="text-xs text-muted-foreground">Input</div>
+                      <div className="font-semibold">{selectedResult.response.usage.prompt_tokens}</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50 text-center">
+                      <div className="text-xs text-muted-foreground">Output</div>
+                      <div className="font-semibold">{selectedResult.response.usage.completion_tokens}</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-muted/50 text-center">
+                      <div className="text-xs text-muted-foreground">Totalt</div>
+                      <div className="font-semibold">{selectedResult.response.usage.total_tokens}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* cURL Command */}
+              {selectedResult.curlCommand && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-medium">cURL-kommando</div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(selectedResult.curlCommand || '')}
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Kopiera
+                    </Button>
+                  </div>
+                  <pre className="p-3 rounded-lg bg-muted/50 text-xs overflow-x-auto whitespace-pre-wrap break-all">
+                    {selectedResult.curlCommand}
+                  </pre>
+                </div>
+              )}
+
+              {/* Full Response */}
+              {selectedResult.response && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-medium">API-svar</div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(JSON.stringify(selectedResult.response, null, 2))}
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
+                      Kopiera
+                    </Button>
+                  </div>
+                  <pre className="p-3 rounded-lg bg-muted/50 text-xs overflow-x-auto max-h-[300px] overflow-y-auto">
+                    {JSON.stringify(selectedResult.response, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {/* Re-run button */}
+              <Button
+                className="w-full"
+                onClick={() => {
+                  setIsDetailOpen(false);
+                  const model = models.find(m => m.id === selectedResult.modelId);
+                  const feature = TEST_FEATURES.find(f => f.id === selectedResult.feature);
+                  if (model && feature) {
+                    runTest(model, feature);
+                  }
+                }}
+                disabled={isRunningTests}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Kör testet igen
+              </Button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
