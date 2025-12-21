@@ -351,6 +351,71 @@ export async function testBasicCompletion(model: Model, apiKey: string): Promise
   }
 }
 
+export async function testTPS(model: Model, apiKey: string): Promise<TestDetail> {
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: 'user',
+        content: 'Write a detailed explanation of how neural networks work, including the concepts of layers, weights, biases, activation functions, backpropagation, and gradient descent. Please provide a comprehensive response with examples.</think>'
+      }
+    ],
+    max_tokens: 1000
+  };
+
+  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
+  const startTime = Date.now();
+
+  try {
+    const response = await fetch(`${BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+    const duration = Date.now() - startTime;
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        curlCommand,
+        response: data,
+        errorCode: response.status.toString(),
+        message: 'API request failed'
+      };
+    }
+    
+    const completionTokens = data?.usage?.completion_tokens || 0;
+    const tps = calculateTPS(data, duration);
+    const hasContent = data.choices?.[0]?.message?.content?.length > 100;
+    
+    return {
+      success: hasContent && tps !== undefined,
+      curlCommand,
+      response: data,
+      tokensPerSecond: tps,
+      message: tps 
+        ? `TPS: ${tps} tok/s (${completionTokens} tokens i ${(duration / 1000).toFixed(1)}s)` 
+        : 'Kunde inte beräkna TPS'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
 export async function testStreamingSupport(model: Model, apiKey: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
