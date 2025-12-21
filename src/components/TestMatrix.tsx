@@ -37,7 +37,8 @@ import {
   testOCR,
   testEmbedding,
   testReranking,
-  testSpeechToText
+  testSpeechToText,
+  testTPS
 } from '../services/bergetApi';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -88,6 +89,13 @@ const TEST_FEATURES: TestFeature[] = [
     name: 'Multimodal',
     description: 'Bildanalys och vision',
     testFunction: testMultimodal,
+    supportedTypes: ['chat']
+  },
+  {
+    id: 'tps',
+    name: 'TPS Test',
+    description: 'Tokens per sekund (längre svar)',
+    testFunction: testTPS,
     supportedTypes: ['chat']
   },
   {
