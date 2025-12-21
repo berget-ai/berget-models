@@ -31,6 +31,6 @@ export interface TestFeature {
   id: string;
   name: string;
   description: string;
-  testFunction: (model: Model, apiKey: string) => Promise<TestDetail>;
+  testFunction: (model: Model, apiKey: string, baseUrl: string) => Promise<TestDetail>;
   supportedTypes: string[];
 }

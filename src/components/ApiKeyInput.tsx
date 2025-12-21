@@ -4,13 +4,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Key, Eye, EyeOff } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 
 interface ApiKeyInputProps {
   onApiKeySubmit: (apiKey: string) => void;
   isLoading?: boolean;
+  useStaging: boolean;
+  onStagingChange: (value: boolean) => void;
 }
 
-export default function ApiKeyInput({ onApiKeySubmit, isLoading }: ApiKeyInputProps) {
+export default function ApiKeyInput({ onApiKeySubmit, isLoading, useStaging, onStagingChange }: ApiKeyInputProps) {
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
 
@@ -49,6 +53,21 @@ export default function ApiKeyInput({ onApiKeySubmit, isLoading }: ApiKeyInputPr
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="staging-switch" className="text-sm font-medium">
+                  Miljö:
+                </Label>
+                <Badge variant={useStaging ? "secondary" : "default"}>
+                  {useStaging ? 'Staging' : 'Production'}
+                </Badge>
+              </div>
+              <Switch
+                id="staging-switch"
+                checked={useStaging}
+                onCheckedChange={onStagingChange}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="apiKey" className="text-sm font-medium">
                 API Nyckel

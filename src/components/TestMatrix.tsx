@@ -46,6 +46,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 interface TestMatrixProps {
   apiKey: string;
   onLogout: () => void;
+  baseUrl: string;
 }
 
 const TEST_FEATURES: TestFeature[] = [
@@ -128,7 +129,7 @@ const TEST_FEATURES: TestFeature[] = [
   }
 ];
 
-export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
+export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProps) {
   const [models, setModels] = useState<Model[]>([]);
   const [testResults, setTestResults] = useState<Map<string, TestResult>>(new Map());
   const [isLoadingModels, setIsLoadingModels] = useState(true);
@@ -140,16 +141,16 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
 
   useEffect(() => {
     loadModels();
-  }, [apiKey]);
+  }, [apiKey, baseUrl]);
 
   const loadModels = async () => {
     try {
       setIsLoadingModels(true);
-      const modelData = await fetchModels(apiKey);
+      const modelData = await fetchModels(apiKey, baseUrl);
       setModels(modelData);
       toast({
         title: "Modeller laddade",
-        description: `${modelData.length} modeller hämtade från Berget AI`,
+        description: `${modelData.length} modeller hämtade från ${baseUrl.includes('stage') ? 'Staging' : 'Production'}`,
       });
     } catch (error) {
       toast({
@@ -176,7 +177,7 @@ export default function TestMatrix({ apiKey, onLogout }: TestMatrixProps) {
     const startTime = Date.now();
     
     try {
-      const testDetail = await feature.testFunction(model, apiKey);
+      const testDetail = await feature.testFunction(model, apiKey, baseUrl);
       const duration = Date.now() - startTime;
       
       setTestResults(prev => new Map(prev.set(testKey, {
