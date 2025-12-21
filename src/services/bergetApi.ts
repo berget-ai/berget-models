@@ -2,8 +2,6 @@ import { Model, TestDetail } from '../types/model';
 import { encodeImageToBase64 } from '../utils/imageEncoder';
 import testImage from '../assets/test-image.jpg';
 
-const BASE_URL = 'https://api.berget.ai/v1';
-
 function calculateTPS(response: any, durationMs: number): number | undefined {
   const completionTokens = response?.usage?.completion_tokens;
   if (!completionTokens || durationMs === 0) return undefined;
@@ -19,8 +17,8 @@ export function getModelType(modelId: string): 'chat' | 'embedding' | 'rerank' |
   return 'chat';
 }
 
-export async function fetchModels(apiKey: string): Promise<Model[]> {
-  const response = await fetch(`${BASE_URL}/models`, {
+export async function fetchModels(apiKey: string, baseUrl: string): Promise<Model[]> {
+  const response = await fetch(`${baseUrl}/models`, {
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
@@ -40,11 +38,11 @@ export async function fetchModels(apiKey: string): Promise<Model[]> {
           model.model_type === 'rerank' ? 'rerank' :
           model.model_type === 'speech-to-text' ? 'speech-to-text' :
           model.model_type === 'ocr' ? 'ocr' :
-          getModelType(model.id) // fallback to old method
+          getModelType(model.id)
   }));
 }
 
-export async function testToolUse(model: Model, apiKey: string): Promise<TestDetail> {
+export async function testToolUse(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
     messages: [
@@ -80,7 +78,7 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
     max_tokens: 4000
   };
 
-  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
@@ -88,7 +86,7 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
   const startTime = Date.now();
   
   try {
-    const response = await fetch(`${BASE_URL}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -135,7 +133,7 @@ export async function testToolUse(model: Model, apiKey: string): Promise<TestDet
   }
 }
 
-export async function testJsonSupport(model: Model, apiKey: string): Promise<TestDetail> {
+export async function testJsonSupport(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
     messages: [
@@ -148,7 +146,7 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<Tes
     max_tokens: 500
   };
 
-  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
@@ -156,7 +154,7 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<Tes
   const startTime = Date.now();
 
   try {
-    const response = await fetch(`${BASE_URL}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -208,7 +206,7 @@ export async function testJsonSupport(model: Model, apiKey: string): Promise<Tes
   }
 }
 
-export async function testJsonSchema(model: Model, apiKey: string): Promise<TestDetail> {
+export async function testJsonSchema(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const schema = {
     type: 'object',
     properties: {
@@ -234,7 +232,7 @@ export async function testJsonSchema(model: Model, apiKey: string): Promise<Test
     max_tokens: 500
   };
 
-  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
@@ -242,7 +240,7 @@ export async function testJsonSchema(model: Model, apiKey: string): Promise<Test
   const startTime = Date.now();
 
   try {
-    const response = await fetch(`${BASE_URL}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -300,7 +298,7 @@ export async function testJsonSchema(model: Model, apiKey: string): Promise<Test
   }
 }
 
-export async function testBasicCompletion(model: Model, apiKey: string): Promise<TestDetail> {
+export async function testBasicCompletion(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
     messages: [
@@ -312,7 +310,7 @@ export async function testBasicCompletion(model: Model, apiKey: string): Promise
     max_tokens: 500
   };
 
-  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
@@ -320,7 +318,7 @@ export async function testBasicCompletion(model: Model, apiKey: string): Promise
   const startTime = Date.now();
 
   try {
-    const response = await fetch(`${BASE_URL}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -351,7 +349,7 @@ export async function testBasicCompletion(model: Model, apiKey: string): Promise
   }
 }
 
-export async function testTPS(model: Model, apiKey: string): Promise<TestDetail> {
+export async function testTPS(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
     messages: [
@@ -363,7 +361,7 @@ export async function testTPS(model: Model, apiKey: string): Promise<TestDetail>
     max_tokens: 1000
   };
 
-  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
@@ -371,7 +369,7 @@ export async function testTPS(model: Model, apiKey: string): Promise<TestDetail>
   const startTime = Date.now();
 
   try {
-    const response = await fetch(`${BASE_URL}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -416,7 +414,7 @@ export async function testTPS(model: Model, apiKey: string): Promise<TestDetail>
   }
 }
 
-export async function testStreamingSupport(model: Model, apiKey: string): Promise<TestDetail> {
+export async function testStreamingSupport(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
     messages: [
@@ -429,13 +427,13 @@ export async function testStreamingSupport(model: Model, apiKey: string): Promis
     max_tokens: 200
   };
 
-  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
 
   try {
-    const response = await fetch(`${BASE_URL}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -455,7 +453,6 @@ export async function testStreamingSupport(model: Model, apiKey: string): Promis
       };
     }
 
-    // Read a small chunk of the response to check for streaming format
     const reader = response.body?.getReader();
     if (!reader) {
       return {
@@ -495,7 +492,7 @@ export async function testStreamingSupport(model: Model, apiKey: string): Promis
   }
 }
 
-export async function testMultimodal(model: Model, apiKey: string): Promise<TestDetail> {
+export async function testMultimodal(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   let base64Image: string;
   
   try {
@@ -531,7 +528,7 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
     max_tokens: 300
   };
 
-  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
@@ -539,7 +536,7 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
   const startTime = Date.now();
 
   try {
-    const response = await fetch(`${BASE_URL}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -551,7 +548,6 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
     const data = await response.json();
     const duration = Date.now() - startTime;
     
-    // Check if model actually saw the image (not just responded)
     const content = data.choices?.[0]?.message?.content || '';
     const imageNotSeenPhrases = [
       "can't see",
@@ -591,8 +587,7 @@ export async function testMultimodal(model: Model, apiKey: string): Promise<Test
   }
 }
 
-export async function testOCR(model: Model, apiKey: string): Promise<TestDetail> {
-  // Use a receipt image with tables and text for OCR testing
+export async function testOCR(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const receiptImageUrl = 'https://ofasys-multimodal-wlcb-3-toshanghai.oss-accelerate.aliyuncs.com/wpf272043/keepme/image/receipt.png';
   
   const requestBody = {
@@ -618,7 +613,7 @@ export async function testOCR(model: Model, apiKey: string): Promise<TestDetail>
     temperature: 0.0
   };
 
-  const curlCommand = `curl -X POST "${BASE_URL}/chat/completions" \\
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
@@ -626,7 +621,7 @@ export async function testOCR(model: Model, apiKey: string): Promise<TestDetail>
   const startTime = Date.now();
 
   try {
-    const response = await fetch(`${BASE_URL}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -650,10 +645,6 @@ export async function testOCR(model: Model, apiKey: string): Promise<TestDetail>
     
     const content = data.choices?.[0]?.message?.content || '';
     
-    // Check for OCR-specific indicators:
-    // - Contains table markup (<td>, </td>, <table>, etc.)
-    // - Contains extracted text (numbers, words)
-    // - Response is substantial (OCR output is typically verbose)
     const hasTableMarkup = content.includes('<td>') || content.includes('</td>') || content.includes('<table>');
     const hasSubstantialContent = content.length > 100;
     const containsNumbers = /\d+/.test(content);
@@ -682,19 +673,19 @@ export async function testOCR(model: Model, apiKey: string): Promise<TestDetail>
   }
 }
 
-export async function testEmbedding(model: Model, apiKey: string): Promise<TestDetail> {
+export async function testEmbedding(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
     input: 'Test embedding text',
   };
 
-  const curlCommand = `curl -X POST "${BASE_URL}/embeddings" \\
+  const curlCommand = `curl -X POST "${baseUrl}/embeddings" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
 
   try {
-    const response = await fetch(`${BASE_URL}/embeddings`, {
+    const response = await fetch(`${baseUrl}/embeddings`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -723,7 +714,7 @@ export async function testEmbedding(model: Model, apiKey: string): Promise<TestD
   }
 }
 
-export async function testReranking(model: Model, apiKey: string): Promise<TestDetail> {
+export async function testReranking(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
     query: 'What is artificial intelligence?',
@@ -734,13 +725,13 @@ export async function testReranking(model: Model, apiKey: string): Promise<TestD
     ]
   };
 
-  const curlCommand = `curl -X POST "${BASE_URL}/rerank" \\
+  const curlCommand = `curl -X POST "${baseUrl}/rerank" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
 
   try {
-    const response = await fetch(`${BASE_URL}/rerank`, {
+    const response = await fetch(`${baseUrl}/rerank`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -769,24 +760,22 @@ export async function testReranking(model: Model, apiKey: string): Promise<TestD
   }
 }
 
-export async function testSpeechToText(model: Model, apiKey: string): Promise<TestDetail> {
-  const curlCommand = `curl -X POST "${BASE_URL}/audio/transcriptions" \\
+export async function testSpeechToText(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const curlCommand = `curl -X POST "${baseUrl}/audio/transcriptions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -F "file=@test.wav" \\
   -F "model=${model.id}"`;
 
   try {
-    // Create a simple audio blob for testing (1 second of silence)
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const buffer = audioContext.createBuffer(1, audioContext.sampleRate, audioContext.sampleRate);
     
-    // Convert to WAV format
     const formData = new FormData();
     const audioBlob = new Blob([buffer], { type: 'audio/wav' });
     formData.append('file', audioBlob, 'test.wav');
     formData.append('model', model.id);
 
-    const response = await fetch(`${BASE_URL}/audio/transcriptions`, {
+    const response = await fetch(`${baseUrl}/audio/transcriptions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
