@@ -31,7 +31,7 @@ export async function fetchModels(apiKey: string, baseUrl: string): Promise<Mode
 
   const data = await response.json();
   const models = data.data || [];
-  return models.map((model: any) => ({
+  const mappedModels = models.map((model: any) => ({
     ...model,
     type: model.model_type === 'text' ? 'chat' : 
           model.model_type === 'embedding' ? 'embedding' :
@@ -40,6 +40,20 @@ export async function fetchModels(apiKey: string, baseUrl: string): Promise<Mode
           model.model_type === 'ocr' ? 'ocr' :
           getModelType(model.id)
   }));
+  
+  // Add Docling OCR model if not already present
+  const hasDocling = mappedModels.some((m: Model) => m.id.toLowerCase().includes('docling'));
+  if (!hasDocling) {
+    mappedModels.push({
+      id: 'docling',
+      object: 'model',
+      created: Date.now(),
+      owned_by: 'berget',
+      type: 'ocr' as const
+    });
+  }
+  
+  return mappedModels;
 }
 
 export async function testToolUse(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
