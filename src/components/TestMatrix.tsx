@@ -300,13 +300,21 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     }
   };
 
-  const getStatusIcon = (testKey: string) => {
+  const getStatusIcon = (testKey: string, featureId?: string) => {
     const result = testResults.get(testKey);
     
     switch (result?.status) {
       case 'testing':
         return <Loader2 className="h-4 w-4 animate-spin text-warning" />;
       case 'success':
+        // Show TPS value for TPS tests instead of checkmark
+        if (featureId === 'tps' && result.tokensPerSecond !== undefined) {
+          return (
+            <span className="text-xs font-medium text-success whitespace-nowrap">
+              {result.tokensPerSecond} t/s
+            </span>
+          );
+        }
         return <Check className="h-4 w-4 text-success" />;
       case 'error':
         return <X className="h-4 w-4 text-destructive" />;
@@ -392,13 +400,13 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 hover:bg-muted/50 cursor-pointer"
+                        className={`${feature.id === 'tps' && result.status === 'success' ? 'h-8 px-2 min-w-[60px]' : 'h-8 w-8 p-0'} hover:bg-muted/50 cursor-pointer`}
                         onClick={() => {
                           setSelectedResult(result);
                           setIsDetailOpen(true);
                         }}
                       >
-                        {getStatusIcon(testKey)}
+                        {getStatusIcon(testKey, feature.id)}
                       </Button>
                     ) : (
                       <Button
@@ -408,7 +416,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                         disabled={isRunningTests}
                         className="h-8 w-8 p-0 hover:bg-muted/50"
                       >
-                        {getStatusIcon(testKey)}
+                        {getStatusIcon(testKey, feature.id)}
                       </Button>
                     )}
                   </TableCell>
