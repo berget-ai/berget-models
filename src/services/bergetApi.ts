@@ -13,7 +13,7 @@ export function getModelType(modelId: string): 'chat' | 'embedding' | 'rerank' |
   if (id.includes('rerank') || id.includes('bge-reranker')) return 'rerank';
   if (id.includes('embed') || id.includes('embedding')) return 'embedding';
   if (id.includes('whisper')) return 'speech-to-text';
-  if (id.includes('ocr')) return 'ocr';
+  if (id.includes('ocr') || id.includes('docling')) return 'ocr';
   return 'chat';
 }
 
@@ -588,160 +588,161 @@ export async function testMultimodal(model: Model, apiKey: string, baseUrl: stri
 }
 
 export async function testOCR(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
-  const receiptImageUrl = 'https://ofasys-multimodal-wlcb-3-toshanghai.oss-accelerate.aliyuncs.com/wpf272043/keepme/image/receipt.png';
+  const isDocling = model.id.toLowerCase().includes('docling');
   
-  const requestBody = {
-    model: model.id,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'image_url',
-            image_url: {
-              url: receiptImageUrl
-            }
-          },
-          {
-            type: 'text',
-            text: 'Free OCR.</think>'
-          }
-        ]
+  if (isDocling) {
+    // Use dedicated /v1/ocr endpoint for Docling
+    const testDocumentUrl = 'https://www.w3.org/WAI/WCAG21/Techniques/pdf/img/table-word.jpg';
+    
+    const requestBody = {
+      document: {
+        url: testDocumentUrl,
+        type: 'document'
+      },
+      options: {
+        tableMode: 'accurate',
+        ocrMethod: 'easyocr',
+        formats: ['md']
       }
-    ],
-    max_tokens: 2048,
-    temperature: 0.0
-  };
+    };
 
-  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
+    const ocrBaseUrl = baseUrl.replace(/\/v1$/, '');
+    
+    const curlCommand = `curl -X POST "${ocrBaseUrl}/v1/ocr" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
 
-  const startTime = Date.now();
+    const startTime = Date.now();
 
-  try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+    try {
+      const response = await fetch(`${ocrBaseUrl}/v1/ocr`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-    const data = await response.json();
-    const duration = Date.now() - startTime;
-    
-    if (!response.ok) {
+      const data = await response.json();
+      const duration = Date.now() - startTime;
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          curlCommand,
+          response: data,
+          errorCode: response.status.toString(),
+          message: `Docling OCR request failed: ${data.error || response.statusText}`
+        };
+      }
+      
+      const content = data.content || data.markdown || '';
+      const hasContent = content.length > 0;
+      
+      return {
+        success: hasContent,
+        curlCommand,
+        response: data,
+        errorCode: hasContent ? undefined : 'NO_CONTENT',
+        message: hasContent 
+          ? `Docling OCR successful - extracted ${content.length} chars in ${duration}ms` 
+          : 'No content extracted from document'
+      };
+    } catch (error) {
       return {
         success: false,
         curlCommand,
-        response: data,
-        errorCode: response.status.toString(),
-        message: 'API request failed'
+        errorCode: 'NETWORK_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  } else {
+    // Use chat/completions endpoint for vision-based OCR (e.g., deepseek-ocr)
+    const receiptImageUrl = 'https://ofasys-multimodal-wlcb-3-toshanghai.oss-accelerate.aliyuncs.com/wpf272043/keepme/image/receipt.png';
     
-    const content = data.choices?.[0]?.message?.content || '';
-    
-    const hasTableMarkup = content.includes('<td>') || content.includes('</td>') || content.includes('<table>');
-    const hasSubstantialContent = content.length > 100;
-    const containsNumbers = /\d+/.test(content);
-    
-    const success = response.ok && hasSubstantialContent && (hasTableMarkup || containsNumbers);
-    
-    return {
-      success,
-      curlCommand,
-      response: data,
-      tokensPerSecond: calculateTPS(data, duration),
-      errorCode: response.ok ? undefined : response.status.toString(),
-      message: success 
-        ? `OCR test successful - extracted ${content.length} chars` 
-        : content.length === 0 
-          ? 'No OCR output received'
-          : 'OCR output may be incomplete or invalid'
+    const requestBody = {
+      model: model.id,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image_url',
+              image_url: {
+                url: receiptImageUrl
+              }
+            },
+            {
+              type: 'text',
+              text: 'Free OCR.</think>'
+            }
+          ]
+        }
+      ],
+      max_tokens: 2048,
+      temperature: 0.0
     };
-  } catch (error) {
-    return {
-      success: false,
-      curlCommand,
-      errorCode: 'NETWORK_ERROR',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-}
 
-export async function testDoclingOCR(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
-  // Use a sample PDF document for testing the Docling OCR endpoint
-  const testDocumentUrl = 'https://www.w3.org/WAI/WCAG21/Techniques/pdf/img/table-word.jpg';
-  
-  const requestBody = {
-    document: {
-      url: testDocumentUrl,
-      type: 'document'
-    },
-    options: {
-      tableMode: 'accurate',
-      ocrMethod: 'easyocr',
-      formats: ['md']
-    }
-  };
-
-  // Extract base URL without /v1 suffix for the OCR endpoint
-  const ocrBaseUrl = baseUrl.replace(/\/v1$/, '');
-  
-  const curlCommand = `curl -X POST "${ocrBaseUrl}/v1/ocr" \\
+    const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -H "Content-Type: application/json" \\
   -d '${JSON.stringify(requestBody, null, 2)}'`;
 
-  const startTime = Date.now();
+    const startTime = Date.now();
 
-  try {
-    const response = await fetch(`${ocrBaseUrl}/v1/ocr`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+    try {
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-    const data = await response.json();
-    const duration = Date.now() - startTime;
-    
-    if (!response.ok) {
+      const data = await response.json();
+      const duration = Date.now() - startTime;
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          curlCommand,
+          response: data,
+          errorCode: response.status.toString(),
+          message: 'API request failed'
+        };
+      }
+      
+      const content = data.choices?.[0]?.message?.content || '';
+      
+      const hasTableMarkup = content.includes('<td>') || content.includes('</td>') || content.includes('<table>');
+      const hasSubstantialContent = content.length > 100;
+      const containsNumbers = /\d+/.test(content);
+      
+      const success = response.ok && hasSubstantialContent && (hasTableMarkup || containsNumbers);
+      
+      return {
+        success,
+        curlCommand,
+        response: data,
+        tokensPerSecond: calculateTPS(data, duration),
+        errorCode: response.ok ? undefined : response.status.toString(),
+        message: success 
+          ? `OCR test successful - extracted ${content.length} chars` 
+          : content.length === 0 
+            ? 'No OCR output received'
+            : 'OCR output may be incomplete or invalid'
+      };
+    } catch (error) {
       return {
         success: false,
         curlCommand,
-        response: data,
-        errorCode: response.status.toString(),
-        message: `Docling OCR request failed: ${data.error || response.statusText}`
+        errorCode: 'NETWORK_ERROR',
+        message: error instanceof Error ? error.message : 'Unknown error'
       };
     }
-    
-    // Check for valid OCR response
-    const content = data.content || data.markdown || '';
-    const hasContent = content.length > 0;
-    
-    return {
-      success: hasContent,
-      curlCommand,
-      response: data,
-      errorCode: hasContent ? undefined : 'NO_CONTENT',
-      message: hasContent 
-        ? `Docling OCR successful - extracted ${content.length} chars in ${duration}ms` 
-        : 'No content extracted from document'
-    };
-  } catch (error) {
-    return {
-      success: false,
-      curlCommand,
-      errorCode: 'NETWORK_ERROR',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    };
   }
 }
 

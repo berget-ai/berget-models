@@ -35,7 +35,6 @@ import {
   testStreamingSupport,
   testMultimodal,
   testOCR,
-  testDoclingOCR,
   testEmbedding,
   testReranking,
   testSpeechToText,
@@ -102,16 +101,9 @@ const TEST_FEATURES: TestFeature[] = [
   },
   {
     id: 'ocr',
-    name: 'OCR (Vision)',
-    description: 'Text/tabell-extraktion via vision-modell',
+    name: 'OCR',
+    description: 'Text/tabell-extraktion (vision eller docling)',
     testFunction: testOCR,
-    supportedTypes: ['ocr']
-  },
-  {
-    id: 'docling_ocr',
-    name: 'OCR (Docling)',
-    description: 'Dedikerad OCR via /v1/ocr endpoint',
-    testFunction: testDoclingOCR,
     supportedTypes: ['ocr']
   },
   {
