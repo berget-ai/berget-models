@@ -407,7 +407,9 @@ export async function testTPS(model: Model, apiKey: string, baseUrl: string): Pr
     
     const completionTokens = data?.usage?.completion_tokens || 0;
     const tps = calculateTPS(data, duration);
-    const hasContent = data.choices?.[0]?.message?.content?.length > 100;
+    const content = data.choices?.[0]?.message?.content || '';
+    const reasoningContent = data.choices?.[0]?.message?.reasoning_content || '';
+    const hasContent = content.length > 100 || reasoningContent.length > 100;
     
     return {
       success: hasContent && tps !== undefined,
