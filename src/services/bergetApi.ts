@@ -673,6 +673,78 @@ export async function testOCR(model: Model, apiKey: string, baseUrl: string): Pr
   }
 }
 
+export async function testDoclingOCR(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  // Use a sample PDF document for testing the Docling OCR endpoint
+  const testDocumentUrl = 'https://www.w3.org/WAI/WCAG21/Techniques/pdf/img/table-word.jpg';
+  
+  const requestBody = {
+    document: {
+      url: testDocumentUrl,
+      type: 'document'
+    },
+    options: {
+      tableMode: 'accurate',
+      ocrMethod: 'easyocr',
+      formats: ['md']
+    }
+  };
+
+  // Extract base URL without /v1 suffix for the OCR endpoint
+  const ocrBaseUrl = baseUrl.replace(/\/v1$/, '');
+  
+  const curlCommand = `curl -X POST "${ocrBaseUrl}/v1/ocr" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
+  const startTime = Date.now();
+
+  try {
+    const response = await fetch(`${ocrBaseUrl}/v1/ocr`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+    const duration = Date.now() - startTime;
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        curlCommand,
+        response: data,
+        errorCode: response.status.toString(),
+        message: `Docling OCR request failed: ${data.error || response.statusText}`
+      };
+    }
+    
+    // Check for valid OCR response
+    const content = data.content || data.markdown || '';
+    const hasContent = content.length > 0;
+    
+    return {
+      success: hasContent,
+      curlCommand,
+      response: data,
+      errorCode: hasContent ? undefined : 'NO_CONTENT',
+      message: hasContent 
+        ? `Docling OCR successful - extracted ${content.length} chars in ${duration}ms` 
+        : 'No content extracted from document'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: 'NETWORK_ERROR',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
 export async function testEmbedding(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const requestBody = {
     model: model.id,
