@@ -44,7 +44,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-card/80 backdrop-blur-sm border rounded-lg px-3 py-2">
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg px-3 py-2">
         <Label htmlFor="staging-switch" className="text-sm font-medium">
           {useStaging ? 'Staging' : 'Production'}
         </Label>
