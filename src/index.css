@@ -18,9 +18,9 @@ All colors MUST be HSL.
     --popover: 0 0% 12%;
     --popover-foreground: 0 0% 100%;
 
-    /* Primary Green: #52b788 */
-    --primary: 153 44% 52%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary: Creme #e5ddd5 */
+    --primary: 30 24% 87%;
+    --primary-foreground: 0 0% 10%;
 
     /* Dark Grey: #1a1a1a */
     --secondary: 0 0% 15%;
@@ -40,6 +40,10 @@ All colors MUST be HSL.
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 153 44% 52%;
+
+    /* Brand Green: #52b788 - use for buttons, success states */
+    --brand: 153 44% 52%;
+    --brand-foreground: 0 0% 100%;
 
     /* Success Green: #307852 */
     --success: 153 44% 33%;
@@ -77,6 +81,10 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-foreground;
   }
 }
