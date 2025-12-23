@@ -618,7 +618,7 @@ export async function testOCR(model: Model, apiKey: string, baseUrl: string): Pr
       options: {
         tableMode: 'accurate',
         ocrMethod: 'easyocr',
-        formats: ['md']
+        outputFormat: 'md'
       }
     };
 
