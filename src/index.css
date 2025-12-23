@@ -20,7 +20,7 @@ All colors MUST be HSL.
 
     /* Primary: Creme #e5ddd5 */
     --primary: 30 24% 87%;
-    --primary-foreground: 0 0% 10%;
+    --primary-foreground: 0 0% 0%;
 
     /* Dark Grey: #1a1a1a */
     --secondary: 0 0% 15%;
