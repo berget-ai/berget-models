@@ -14,10 +14,18 @@ function formatPrompt(prompt: string, modelId: string): string {
   return isGLM ? `${prompt}</think>` : prompt;
 }
 
-// Strip <think>...</think> blocks from responses (internal tokens that break parsing)
+// Strip thinking blocks from responses (internal tokens that break parsing)
+// Handles both <think>...</think> and content before </think> without opening tag
 function stripThinkingBlocks(content: string): string {
   if (!content) return content;
-  return content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  // First, remove any <think>...</think> blocks
+  let cleaned = content.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  // Then, if there's a </think> tag, take only the content after it
+  const thinkEndIndex = cleaned.indexOf('</think>');
+  if (thinkEndIndex !== -1) {
+    cleaned = cleaned.substring(thinkEndIndex + 8); // 8 = length of '</think>'
+  }
+  return cleaned.trim();
 }
 
 export function getModelType(modelId: string): 'chat' | 'embedding' | 'rerank' | 'speech-to-text' | 'ocr' {
