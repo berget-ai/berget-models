@@ -503,7 +503,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
             <Accordion type="multiple" defaultValue={["chat", "speech", "ocr", "utility"]} className="space-y-4">
               {/* Chat Models */}
               {getModelsByType().chatModels.length > 0 && (
-                <AccordionItem value="chat" className="border rounded-lg">
+                <AccordionItem value="chat" className="border border-border/50 rounded-lg">
                   <AccordionTrigger className="px-4 hover:no-underline">
                     <div className="flex items-center justify-between w-full pr-4">
                       <div className="flex items-center gap-3">
@@ -531,13 +531,13 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                   <AccordionContent>
                     <div className="overflow-auto">
                       <Table>
-                        <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
+                        <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
                           <TableRow className="hover:bg-transparent">
-                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
+                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
                               Modell
                             </TableHead>
                             {getFeaturesForGroupType('chat').map((feature) => (
-                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
+                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
                                   <span className="font-semibold text-foreground">{feature.name}</span>
                                   <span className="text-xs text-muted-foreground">{feature.description}</span>
@@ -555,7 +555,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
 
               {/* Speech Models */}
               {getModelsByType().speechModels.length > 0 && (
-                <AccordionItem value="speech" className="border rounded-lg">
+                <AccordionItem value="speech" className="border border-border/50 rounded-lg">
                   <AccordionTrigger className="px-4 hover:no-underline">
                     <div className="flex items-center justify-between w-full pr-4">
                       <div className="flex items-center gap-3">
@@ -583,13 +583,13 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                   <AccordionContent>
                     <div className="overflow-auto">
                       <Table>
-                        <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
+                        <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
                           <TableRow className="hover:bg-transparent">
-                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
+                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
                               Modell
                             </TableHead>
                             {getFeaturesForGroupType('speech-to-text').map((feature) => (
-                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
+                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
                                   <span className="font-semibold text-foreground">{feature.name}</span>
                                   <span className="text-xs text-muted-foreground">{feature.description}</span>
@@ -607,7 +607,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
 
               {/* OCR Models */}
               {getModelsByType().ocrModels.length > 0 && (
-                <AccordionItem value="ocr" className="border rounded-lg">
+                <AccordionItem value="ocr" className="border border-border/50 rounded-lg">
                   <AccordionTrigger className="px-4 hover:no-underline">
                     <div className="flex items-center justify-between w-full pr-4">
                       <div className="flex items-center gap-3">
@@ -635,13 +635,13 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                   <AccordionContent>
                     <div className="overflow-auto">
                       <Table>
-                        <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
+                        <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
                           <TableRow className="hover:bg-transparent">
-                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
+                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
                               Modell
                             </TableHead>
                             {getFeaturesForGroupType('ocr').map((feature) => (
-                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
+                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
                                   <span className="font-semibold text-foreground">{feature.name}</span>
                                   <span className="text-xs text-muted-foreground">{feature.description}</span>
@@ -659,7 +659,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
 
               {/* Utility Models */}
               {getModelsByType().utilityModels.length > 0 && (
-                <AccordionItem value="utility" className="border rounded-lg">
+                <AccordionItem value="utility" className="border border-border/50 rounded-lg">
                   <AccordionTrigger className="px-4 hover:no-underline">
                     <div className="flex items-center justify-between w-full pr-4">
                       <div className="flex items-center gap-3">
@@ -687,13 +687,13 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                   <AccordionContent>
                     <div className="overflow-auto">
                       <Table>
-                        <TableHeader className="sticky top-0 z-10 bg-card border-b border-border">
+                        <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
                           <TableRow className="hover:bg-transparent">
-                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card border-r border-border">
+                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
                               Modell
                             </TableHead>
                             {getFeaturesForGroupType('utility').map((feature) => (
-                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card border-r border-border last:border-r-0">
+                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
                                   <span className="font-semibold text-foreground">{feature.name}</span>
                                   <span className="text-xs text-muted-foreground">{feature.description}</span>
