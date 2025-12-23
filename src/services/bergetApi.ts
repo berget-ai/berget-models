@@ -8,6 +8,12 @@ function calculateTPS(response: any, durationMs: number): number | undefined {
   return Math.round((completionTokens / durationMs) * 1000 * 10) / 10;
 }
 
+// GLM models require </think> suffix to skip thinking mode
+function formatPrompt(prompt: string, modelId: string): string {
+  const isGLM = modelId.toLowerCase().includes('glm');
+  return isGLM ? `${prompt}</think>` : prompt;
+}
+
 export function getModelType(modelId: string): 'chat' | 'embedding' | 'rerank' | 'speech-to-text' | 'ocr' {
   const id = modelId.toLowerCase();
   if (id.includes('rerank') || id.includes('bge-reranker')) return 'rerank';
@@ -57,6 +63,7 @@ export async function fetchModels(apiKey: string, baseUrl: string): Promise<Mode
 }
 
 export async function testToolUse(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const userPrompt = formatPrompt('What is the weather like today in Stockholm? Use the get_weather tool to answer this question.', model.id);
   const requestBody = {
     model: model.id,
     messages: [
@@ -66,7 +73,7 @@ export async function testToolUse(model: Model, apiKey: string, baseUrl: string)
       },
       {
         role: 'user',
-        content: 'What is the weather like today in Stockholm? Use the get_weather tool to answer this question.</think>'
+        content: userPrompt
       }
     ],
     tools: [
@@ -148,12 +155,13 @@ export async function testToolUse(model: Model, apiKey: string, baseUrl: string)
 }
 
 export async function testJsonSupport(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const userPrompt = formatPrompt('Please return a valid JSON object with exactly one field called "test" that has the boolean value true. Your response should be only the JSON object, nothing else.', model.id);
   const requestBody = {
     model: model.id,
     messages: [
       {
         role: 'user',
-        content: 'Please return a valid JSON object with exactly one field called "test" that has the boolean value true. Your response should be only the JSON object, nothing else.</think>'
+        content: userPrompt
       }
     ],
     response_format: { type: 'json_object' },
@@ -232,12 +240,13 @@ export async function testJsonSchema(model: Model, apiKey: string, baseUrl: stri
     additionalProperties: false
   };
 
+  const userPrompt = formatPrompt('Generate a person profile as JSON with exactly these fields: name (string), age (number), email (string). Use: name "John Doe", age 30, email "john@example.com". Return only valid JSON with no additional fields.', model.id);
   const requestBody = {
     model: model.id,
     messages: [
       {
         role: 'user',
-        content: `Generate a person profile as JSON with exactly these fields: name (string), age (number), email (string). Use: name "John Doe", age 30, email "john@example.com". Return only valid JSON with no additional fields.</think>`
+        content: userPrompt
       }
     ],
     response_format: { 
@@ -313,12 +322,13 @@ export async function testJsonSchema(model: Model, apiKey: string, baseUrl: stri
 }
 
 export async function testBasicCompletion(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const userPrompt = formatPrompt('Hello, please respond with "Test successful"', model.id);
   const requestBody = {
     model: model.id,
     messages: [
       {
         role: 'user',
-        content: 'Hello, please respond with "Test successful"</think>'
+        content: userPrompt
       }
     ],
     max_tokens: 500
@@ -364,12 +374,13 @@ export async function testBasicCompletion(model: Model, apiKey: string, baseUrl:
 }
 
 export async function testTPS(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const userPrompt = formatPrompt('Write a detailed explanation of how neural networks work, including the concepts of layers, weights, biases, activation functions, backpropagation, and gradient descent. Please provide a comprehensive response with examples.', model.id);
   const requestBody = {
     model: model.id,
     messages: [
       {
         role: 'user',
-        content: 'Write a detailed explanation of how neural networks work, including the concepts of layers, weights, biases, activation functions, backpropagation, and gradient descent. Please provide a comprehensive response with examples.</think>'
+        content: userPrompt
       }
     ],
     max_tokens: 1000
@@ -431,12 +442,13 @@ export async function testTPS(model: Model, apiKey: string, baseUrl: string): Pr
 }
 
 export async function testStreamingSupport(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const userPrompt = formatPrompt('Hello', model.id);
   const requestBody = {
     model: model.id,
     messages: [
       {
         role: 'user',
-        content: 'Hello</think>'
+        content: userPrompt
       }
     ],
     stream: true,
@@ -522,6 +534,7 @@ export async function testMultimodal(model: Model, apiKey: string, baseUrl: stri
     };
   }
 
+  const textPrompt = formatPrompt('What do you see in this image? Please describe it briefly.', model.id);
   const requestBody = {
     model: model.id,
     messages: [
@@ -530,7 +543,7 @@ export async function testMultimodal(model: Model, apiKey: string, baseUrl: stri
         content: [
           {
             type: 'text',
-            text: 'What do you see in this image? Please describe it briefly.</think>'
+            text: textPrompt
           },
           {
             type: 'image_url',
@@ -692,7 +705,7 @@ export async function testOCR(model: Model, apiKey: string, baseUrl: string): Pr
             },
             {
               type: 'text',
-              text: 'Free OCR.</think>'
+              text: formatPrompt('Free OCR.', model.id)
             }
           ]
         }
