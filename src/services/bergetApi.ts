@@ -14,6 +14,12 @@ function formatPrompt(prompt: string, modelId: string): string {
   return isGLM ? `${prompt}</think>` : prompt;
 }
 
+// Strip <think>...</think> blocks from responses (internal tokens that break parsing)
+function stripThinkingBlocks(content: string): string {
+  if (!content) return content;
+  return content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+}
+
 export function getModelType(modelId: string): 'chat' | 'embedding' | 'rerank' | 'speech-to-text' | 'ocr' {
   const id = modelId.toLowerCase();
   if (id.includes('rerank') || id.includes('bge-reranker')) return 'rerank';
@@ -199,7 +205,8 @@ export async function testJsonSupport(model: Model, apiKey: string, baseUrl: str
     }
     
     try {
-      const content = data.choices?.[0]?.message?.content;
+      const rawContent = data.choices?.[0]?.message?.content;
+      const content = stripThinkingBlocks(rawContent || '');
       const parsed = JSON.parse(content || '{}');
       const success = parsed.test === true;
       
@@ -286,7 +293,8 @@ export async function testJsonSchema(model: Model, apiKey: string, baseUrl: stri
     }
     
     try {
-      const content = data.choices?.[0]?.message?.content;
+      const rawContent = data.choices?.[0]?.message?.content;
+      const content = stripThinkingBlocks(rawContent || '');
       const parsed = JSON.parse(content || '{}');
       
       const hasName = typeof parsed.name === 'string' && parsed.name.length > 0;
@@ -353,7 +361,9 @@ export async function testBasicCompletion(model: Model, apiKey: string, baseUrl:
 
     const data = await response.json();
     const duration = Date.now() - startTime;
-    const success = response.ok && data.choices?.[0]?.message?.content?.includes('Test successful');
+    const rawContent = data.choices?.[0]?.message?.content || '';
+    const content = stripThinkingBlocks(rawContent);
+    const success = response.ok && content.includes('Test successful');
     
     return {
       success,
@@ -418,7 +428,8 @@ export async function testTPS(model: Model, apiKey: string, baseUrl: string): Pr
     
     const completionTokens = data?.usage?.completion_tokens || 0;
     const tps = calculateTPS(data, duration);
-    const content = data.choices?.[0]?.message?.content || '';
+    const rawContent = data.choices?.[0]?.message?.content || '';
+    const content = stripThinkingBlocks(rawContent);
     const reasoningContent = data.choices?.[0]?.message?.reasoning_content || '';
     const hasContent = content.length > 100 || reasoningContent.length > 100;
     
@@ -577,7 +588,8 @@ export async function testMultimodal(model: Model, apiKey: string, baseUrl: stri
     const data = await response.json();
     const duration = Date.now() - startTime;
     
-    const content = data.choices?.[0]?.message?.content || '';
+    const rawContent = data.choices?.[0]?.message?.content || '';
+    const content = stripThinkingBlocks(rawContent);
     const imageNotSeenPhrases = [
       "can't see",
       "cannot see",
@@ -744,7 +756,8 @@ export async function testOCR(model: Model, apiKey: string, baseUrl: string): Pr
         };
       }
       
-      const content = data.choices?.[0]?.message?.content || '';
+      const rawContent = data.choices?.[0]?.message?.content || '';
+      const content = stripThinkingBlocks(rawContent);
       
       const hasTableMarkup = content.includes('<td>') || content.includes('</td>') || content.includes('<table>');
       const hasSubstantialContent = content.length > 100;
