@@ -8,55 +8,66 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    /* Berget AI Brand Colors */
+    --background: 0 0% 10%;
+    --foreground: 0 0% 100%;
 
-    --card: 240 6% 6%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 240 5% 8%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 142 76% 36%;
-    --primary-foreground: 0 0% 98%;
+    /* Primary Green: #52b788 */
+    --primary: 153 44% 52%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 0 0% 98%;
+    /* Dark Grey: #1a1a1a */
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 5% 10%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 240 4% 16%;
-    --accent-foreground: 0 0% 98%;
+    /* Dark Green: #2D6A4F */
+    --accent: 153 40% 35%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    /* Error Red: #ff0033 */
+    --destructive: 348 100% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 15%;
-    --input: 240 6% 15%;
-    --ring: 142 76% 36%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 153 44% 52%;
 
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 98%;
+    /* Success Green: #307852 */
+    --success: 153 44% 33%;
+    --success-foreground: 0 0% 100%;
     
-    --warning: 38 92% 50%;
-    --warning-foreground: 48 96% 89%;
+    /* Warning Yellow: #ffc200 */
+    --warning: 46 100% 50%;
+    --warning-foreground: 0 0% 0%;
+
+    /* Light Green: #74c69d */
+    --primary-light: 153 44% 62%;
     
-    --gradient-primary: linear-gradient(135deg, hsl(240 6% 10%), hsl(240 5% 6%));
-    --gradient-accent: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 69% 58%));
-    --shadow-glow: 0 0 40px hsl(142 76% 36% / 0.15);
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 10%), hsl(153 40% 20%));
+    --gradient-accent: linear-gradient(135deg, hsl(153 44% 52%), hsl(153 44% 62%));
+    --shadow-glow: 0 0 40px hsl(153 44% 52% / 0.15);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --radius: 0.5rem;
+    /* Corner radius from brand: 10px */
+    --radius: 0.625rem;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 142 76% 36%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 142 76% 36%;
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 153 44% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 153 44% 52%;
   }
 }
 
