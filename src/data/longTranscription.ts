@@ -644,5 +644,259 @@ export const LONG_TRANSCRIPTION = `
 [04:49:15] Event Director: Good ideas. Let's capture these and schedule a follow-up for next week. Nice work, everyone.
 
 [04:49:30] [END OF DEBRIEF]
+[04:45:00] [ORGANIZER DEBRIEF]
+
+[04:45:15] Event Director: Let's do a quick debrief. How do we think it went?
+
+[04:45:30] Event Manager 1: Attendance was strong – 1,247 in-person and 3,820 virtual attendees. That's up 23% from last year.
+
+[04:45:45] Event Manager 2: Feedback surveys are looking positive. Preliminary scores have the keynotes averaging 4.6 out of 5. The panel got 4.4. Workshops ranged from 4.2 to 4.5.
+
+[04:46:15] Event Director: Any issues?
+
+[04:46:30] Event Manager 1: The lunch service was slow – we had lines for about 15 minutes. We'll need more stations next year. And there was an AV hiccup during the afternoon workshop, but tech resolved it quickly.
+
+[04:47:00] Event Manager 2: Some attendees commented that the venue was cold. We've adjusted HVAC for tomorrow's event.
+
+[04:47:15] Event Director: What about sponsorship?
+
+[04:47:30] Event Manager 1: Sponsors are happy. Several have already expressed interest in next year. The expo floor had good traffic, and the lead generation numbers look strong.
+
+[04:48:00] Event Director: Great. Any changes for next year?
+
+[04:48:15] Event Manager 2: Attendees asked for more hands-on workshops. We might consider a full workshop day before the main conference. Also, there's interest in smaller, topic-specific roundtables.
+
+[04:48:45] Event Manager 1: The AI ethics and governance content was well-received. We could expand that track next year. Maybe a dedicated session on regulatory developments.
+
+[04:49:15] Event Director: Good ideas. Let's capture these and schedule a follow-up for next week. Nice work, everyone.
+
+[04:49:30] [END OF DEBRIEF]
+
+[04:45:00] [ORGANIZER DEBRIEF]
+
+[04:45:15] Event Director: Let's do a quick debrief. How do we think it went?
+
+[04:45:30] Event Manager 1: Attendance was strong – 1,247 in-person and 3,820 virtual attendees. That's up 23% from last year.
+
+[04:45:45] Event Manager 2: Feedback surveys are looking positive. Preliminary scores have the keynotes averaging 4.6 out of 5. The panel got 4.4. Workshops ranged from 4.2 to 4.5.
+
+[04:46:15] Event Director: Any issues?
+
+[04:46:30] Event Manager 1: The lunch service was slow – we had lines for about 15 minutes. We'll need more stations next year. And there was an AV hiccup during the afternoon workshop, but tech resolved it quickly.
+
+[04:47:00] Event Manager 2: Some attendees commented that the venue was cold. We've adjusted HVAC for tomorrow's event.
+
+[04:47:15] Event Director: What about sponsorship?
+
+[04:47:30] Event Manager 1: Sponsors are happy. Several have already expressed interest in next year. The expo floor had good traffic, and the lead generation numbers look strong.
+
+[04:48:00] Event Director: Great. Any changes for next year?
+
+[04:48:15] Event Manager 2: Attendees asked for more hands-on workshops. We might consider a full workshop day before the main conference. Also, there's interest in smaller, topic-specific roundtables.
+
+[04:48:45] Event Manager 1: The AI ethics and governance content was well-received. We could expand that track next year. Maybe a dedicated session on regulatory developments.
+
+[04:49:15] Event Director: Good ideas. Let's capture these and schedule a follow-up for next week. Nice work, everyone.
+
+[04:49:30] [END OF DEBRIEF]
+
+
+[04:45:00] [ORGANIZER DEBRIEF]
+
+[04:45:15] Event Director: Let's do a quick debrief. How do we think it went?
+
+[04:45:30] Event Manager 1: Attendance was strong – 1,247 in-person and 3,820 virtual attendees. That's up 23% from last year.
+
+[04:45:45] Event Manager 2: Feedback surveys are looking positive. Preliminary scores have the keynotes averaging 4.6 out of 5. The panel got 4.4. Workshops ranged from 4.2 to 4.5.
+
+[04:46:15] Event Director: Any issues?
+
+[04:46:30] Event Manager 1: The lunch service was slow – we had lines for about 15 minutes. We'll need more stations next year. And there was an AV hiccup during the afternoon workshop, but tech resolved it quickly.
+
+[04:47:00] Event Manager 2: Some attendees commented that the venue was cold. We've adjusted HVAC for tomorrow's event.
+
+[04:47:15] Event Director: What about sponsorship?
+
+[04:47:30] Event Manager 1: Sponsors are happy. Several have already expressed interest in next year. The expo floor had good traffic, and the lead generation numbers look strong.
+
+[04:48:00] Event Director: Great. Any changes for next year?
+
+[04:48:15] Event Manager 2: Attendees asked for more hands-on workshops. We might consider a full workshop day before the main conference. Also, there's interest in smaller, topic-specific roundtables.
+
+[04:48:45] Event Manager 1: The AI ethics and governance content was well-received. We could expand that track next year. Maybe a dedicated session on regulatory developments.
+
+[04:49:15] Event Director: Good ideas. Let's capture these and schedule a follow-up for next week. Nice work, everyone.
+
+[04:49:30] [END OF DEBRIEF]
+
+
+[04:45:00] [ORGANIZER DEBRIEF]
+
+[04:45:15] Event Director: Let's do a quick debrief. How do we think it went?
+
+[04:45:30] Event Manager 1: Attendance was strong – 1,247 in-person and 3,820 virtual attendees. That's up 23% from last year.
+
+[04:45:45] Event Manager 2: Feedback surveys are looking positive. Preliminary scores have the keynotes averaging 4.6 out of 5. The panel got 4.4. Workshops ranged from 4.2 to 4.5.
+
+[04:46:15] Event Director: Any issues?
+
+[04:46:30] Event Manager 1: The lunch service was slow – we had lines for about 15 minutes. We'll need more stations next year. And there was an AV hiccup during the afternoon workshop, but tech resolved it quickly.
+
+[04:47:00] Event Manager 2: Some attendees commented that the venue was cold. We've adjusted HVAC for tomorrow's event.
+
+[04:47:15] Event Director: What about sponsorship?
+
+[04:47:30] Event Manager 1: Sponsors are happy. Several have already expressed interest in next year. The expo floor had good traffic, and the lead generation numbers look strong.
+
+[04:48:00] Event Director: Great. Any changes for next year?
+
+[04:48:15] Event Manager 2: Attendees asked for more hands-on workshops. We might consider a full workshop day before the main conference. Also, there's interest in smaller, topic-specific roundtables.
+
+[04:48:45] Event Manager 1: The AI ethics and governance content was well-received. We could expand that track next year. Maybe a dedicated session on regulatory developments.
+
+[04:49:15] Event Director: Good ideas. Let's capture these and schedule a follow-up for next week. Nice work, everyone.
+
+[04:49:30] [END OF DEBRIEF]
+
+
+[04:45:00] [ORGANIZER DEBRIEF]
+
+[04:45:15] Event Director: Let's do a quick debrief. How do we think it went?
+
+[04:45:30] Event Manager 1: Attendance was strong – 1,247 in-person and 3,820 virtual attendees. That's up 23% from last year.
+
+[04:45:45] Event Manager 2: Feedback surveys are looking positive. Preliminary scores have the keynotes averaging 4.6 out of 5. The panel got 4.4. Workshops ranged from 4.2 to 4.5.
+
+[04:46:15] Event Director: Any issues?
+
+[04:46:30] Event Manager 1: The lunch service was slow – we had lines for about 15 minutes. We'll need more stations next year. And there was an AV hiccup during the afternoon workshop, but tech resolved it quickly.
+
+[04:47:00] Event Manager 2: Some attendees commented that the venue was cold. We've adjusted HVAC for tomorrow's event.
+
+[04:47:15] Event Director: What about sponsorship?
+
+[04:47:30] Event Manager 1: Sponsors are happy. Several have already expressed interest in next year. The expo floor had good traffic, and the lead generation numbers look strong.
+
+[04:48:00] Event Director: Great. Any changes for next year?
+
+[04:48:15] Event Manager 2: Attendees asked for more hands-on workshops. We might consider a full workshop day before the main conference. Also, there's interest in smaller, topic-specific roundtables.
+
+[04:48:45] Event Manager 1: The AI ethics and governance content was well-received. We could expand that track next year. Maybe a dedicated session on regulatory developments.
+
+[04:49:15] Event Director: Good ideas. Let's capture these and schedule a follow-up for next week. Nice work, everyone.
+
+[04:49:30] [END OF DEBRIEF]
+
+[04:45:00] [ORGANIZER DEBRIEF]
+
+[04:45:15] Event Director: Let's do a quick debrief. How do we think it went?
+
+[04:45:30] Event Manager 1: Attendance was strong – 1,247 in-person and 3,820 virtual attendees. That's up 23% from last year.
+
+[04:45:45] Event Manager 2: Feedback surveys are looking positive. Preliminary scores have the keynotes averaging 4.6 out of 5. The panel got 4.4. Workshops ranged from 4.2 to 4.5.
+
+[04:46:15] Event Director: Any issues?
+
+[04:46:30] Event Manager 1: The lunch service was slow – we had lines for about 15 minutes. We'll need more stations next year. And there was an AV hiccup during the afternoon workshop, but tech resolved it quickly.
+
+[04:47:00] Event Manager 2: Some attendees commented that the venue was cold. We've adjusted HVAC for tomorrow's event.
+
+[04:47:15] Event Director: What about sponsorship?
+
+[04:47:30] Event Manager 1: Sponsors are happy. Several have already expressed interest in next year. The expo floor had good traffic, and the lead generation numbers look strong.
+
+[04:48:00] Event Director: Great. Any changes for next year?
+
+[04:48:15] Event Manager 2: Attendees asked for more hands-on workshops. We might consider a full workshop day before the main conference. Also, there's interest in smaller, topic-specific roundtables.
+
+[04:48:45] Event Manager 1: The AI ethics and governance content was well-received. We could expand that track next year. Maybe a dedicated session on regulatory developments.
+
+[04:49:15] Event Director: Good ideas. Let's capture these and schedule a follow-up for next week. Nice work, everyone.
+
+[04:49:30] [END OF DEBRIEF]
+
+[04:45:00] [ORGANIZER DEBRIEF]
+
+[04:45:15] Event Director: Let's do a quick debrief. How do we think it went?
+
+[04:45:30] Event Manager 1: Attendance was strong – 1,247 in-person and 3,820 virtual attendees. That's up 23% from last year.
+
+[04:45:45] Event Manager 2: Feedback surveys are looking positive. Preliminary scores have the keynotes averaging 4.6 out of 5. The panel got 4.4. Workshops ranged from 4.2 to 4.5.
+
+[04:46:15] Event Director: Any issues?
+
+[04:46:30] Event Manager 1: The lunch service was slow – we had lines for about 15 minutes. We'll need more stations next year. And there was an AV hiccup during the afternoon workshop, but tech resolved it quickly.
+
+[04:47:00] Event Manager 2: Some attendees commented that the venue was cold. We've adjusted HVAC for tomorrow's event.
+
+[04:47:15] Event Director: What about sponsorship?
+
+[04:47:30] Event Manager 1: Sponsors are happy. Several have already expressed interest in next year. The expo floor had good traffic, and the lead generation numbers look strong.
+
+[04:48:00] Event Director: Great. Any changes for next year?
+
+[04:48:15] Event Manager 2: Attendees asked for more hands-on workshops. We might consider a full workshop day before the main conference. Also, there's interest in smaller, topic-specific roundtables.
+
+[04:48:45] Event Manager 1: The AI ethics and governance content was well-received. We could expand that track next year. Maybe a dedicated session on regulatory developments.
+
+[04:49:15] Event Director: Good ideas. Let's capture these and schedule a follow-up for next week. Nice work, everyone.
+
+[04:49:30] [END OF DEBRIEF]
+
+[04:45:00] [ORGANIZER DEBRIEF]
+
+[04:45:15] Event Director: Let's do a quick debrief. How do we think it went?
+
+[04:45:30] Event Manager 1: Attendance was strong – 1,247 in-person and 3,820 virtual attendees. That's up 23% from last year.
+
+[04:45:45] Event Manager 2: Feedback surveys are looking positive. Preliminary scores have the keynotes averaging 4.6 out of 5. The panel got 4.4. Workshops ranged from 4.2 to 4.5.
+
+[04:46:15] Event Director: Any issues?
+
+[04:46:30] Event Manager 1: The lunch service was slow – we had lines for about 15 minutes. We'll need more stations next year. And there was an AV hiccup during the afternoon workshop, but tech resolved it quickly.
+
+[04:47:00] Event Manager 2: Some attendees commented that the venue was cold. We've adjusted HVAC for tomorrow's event.
+
+[04:47:15] Event Director: What about sponsorship?
+
+[04:47:30] Event Manager 1: Sponsors are happy. Several have already expressed interest in next year. The expo floor had good traffic, and the lead generation numbers look strong.
+
+[04:48:00] Event Director: Great. Any changes for next year?
+
+[04:48:15] Event Manager 2: Attendees asked for more hands-on workshops. We might consider a full workshop day before the main conference. Also, there's interest in smaller, topic-specific roundtables.
+
+[04:48:45] Event Manager 1: The AI ethics and governance content was well-received. We could expand that track next year. Maybe a dedicated session on regulatory developments.
+
+[04:49:15] Event Director: Good ideas. Let's capture these and schedule a follow-up for next week. Nice work, everyone.
+
+[04:49:30] [END OF DEBRIEF]
+
+[04:45:00] [ORGANIZER DEBRIEF]
+
+[04:45:15] Event Director: Let's do a quick debrief. How do we think it went?
+
+[04:45:30] Event Manager 1: Attendance was strong – 1,247 in-person and 3,820 virtual attendees. That's up 23% from last year.
+
+[04:45:45] Event Manager 2: Feedback surveys are looking positive. Preliminary scores have the keynotes averaging 4.6 out of 5. The panel got 4.4. Workshops ranged from 4.2 to 4.5.
+
+[04:46:15] Event Director: Any issues?
+
+[04:46:30] Event Manager 1: The lunch service was slow – we had lines for about 15 minutes. We'll need more stations next year. And there was an AV hiccup during the afternoon workshop, but tech resolved it quickly.
+
+[04:47:00] Event Manager 2: Some attendees commented that the venue was cold. We've adjusted HVAC for tomorrow's event.
+
+[04:47:15] Event Director: What about sponsorship?
+
+[04:47:30] Event Manager 1: Sponsors are happy. Several have already expressed interest in next year. The expo floor had good traffic, and the lead generation numbers look strong.
+
+[04:48:00] Event Director: Great. Any changes for next year?
+
+[04:48:15] Event Manager 2: Attendees asked for more hands-on workshops. We might consider a full workshop day before the main conference. Also, there's interest in smaller, topic-specific roundtables.
+
+[04:48:45] Event Manager 1: The AI ethics and governance content was well-received. We could expand that track next year. Maybe a dedicated session on regulatory developments.
+
+[04:49:15] Event Director: Good ideas. Let's capture these and schedule a follow-up for next week. Nice work, everyone.
+
+[04:49:30] [END OF DEBRIEF]
 
 [05:00:00] [TRANSCRIPT ENDS]`;
