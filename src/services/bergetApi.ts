@@ -1,6 +1,7 @@
 import { Model, TestDetail } from '../types/model';
 import { encodeImageToBase64 } from '../utils/imageEncoder';
 import testImage from '../assets/test-image.jpg';
+import { LONG_TRANSCRIPTION } from '../data/longTranscription';
 
 function calculateTPS(response: any, durationMs: number): number | undefined {
   const completionTokens = response?.usage?.completion_tokens;
@@ -926,13 +927,7 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
   }
 }
 
-// Long transcription sample for long context testing (~8000 tokens)
-const LONG_TRANSCRIPTION = `
-[00:00:00] Moderator: Welcome everyone to today's quarterly business review meeting. We have quite a full agenda today, so let's get started right away. First, I'd like to welcome our CEO, Sarah Johnson, who will give us an overview of the company's performance this quarter.
-
-[00:00:25] Sarah Johnson: Thank you, and good morning everyone. It's great to see so many familiar faces here today, both in person and joining us remotely. Before we dive into the numbers, I want to acknowledge the incredible work that all of our teams have put in this quarter. Despite the challenging market conditions, we've managed to not only meet but exceed several of our key performance indicators.
-
-[00:01:15] Sarah Johnson: Let me start with some high-level figures. Our total revenue for Q3 came in at 47.3 million dollars, which represents a 12% increase compared to the same quarter last year. Our gross margin improved by 2.5 percentage points to 68.3%, thanks largely to the operational efficiency initiatives that our COO Michael will discuss later.
+// Long transcription is now imported from src/data/longTranscription.ts (~15-20k tokens)
 
 [00:02:00] Sarah Johnson: On the customer side, we added 340 new enterprise customers this quarter, bringing our total enterprise customer base to 2,847. More importantly, our net revenue retention rate stands at 118%, which means our existing customers are not only staying with us but expanding their usage of our platform.
 
