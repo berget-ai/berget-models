@@ -38,7 +38,8 @@ import {
   testEmbedding,
   testReranking,
   testSpeechToText,
-  testTPS
+  testTPS,
+  testLongContextJson
 } from '../services/bergetApi';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -97,6 +98,13 @@ const TEST_FEATURES: TestFeature[] = [
     name: 'TPS Test',
     description: 'Tokens per sekund (längre svar)',
     testFunction: testTPS,
+    supportedTypes: ['chat']
+  },
+  {
+    id: 'long_context_json',
+    name: 'Long Context + JSON',
+    description: 'Lång transkribering (~8k tokens) med JSON output',
+    testFunction: testLongContextJson,
     supportedTypes: ['chat']
   },
   {
