@@ -270,6 +270,251 @@ export const LONG_TRANSCRIPTION = `
 
 [03:36:15] Alex Turner: That sounds expensive from a storage perspective.
 
+
+[03:15:45] Jonathan Blake: I'll close with this thought. We're living through one of the most significant technological transitions in human history. AI will transform every industry, every job, every aspect of how we live. The decisions we make now – as technologists, as business leaders, as a society – will shape that future.
+
+[03:16:30] Jonathan Blake: Let's make it a future we can be proud of. Thank you.
+
+[03:16:45] Conference Host: Thank you, Jonathan, for that inspiring keynote. Before we close, let's have a brief Q&A.
+
+[03:17:00] Audience Member 5: Jonathan, what advice would you give to someone starting an AI company today?
+
+[03:17:15] Jonathan Blake: Great question. First, solve a real problem. Don't start with the technology and look for applications; start with a problem and find the best solution. Second, get to customers fast. The best way to learn is by putting something in users' hands and getting feedback. Third, build a great team. AI is competitive, and talent is your biggest asset. Finally, be patient. Building a great company takes time.
+
+[03:18:00] Audience Member 6: How do you think AI will change the job market over the next 10 years?
+
+[03:18:15] Jonathan Blake: I think we'll see significant shifts. Some jobs will be automated, particularly routine tasks that follow clear rules. But new jobs will emerge – AI trainers, AI ethicists, AI product managers, to name a few. The most valuable skills will be uniquely human ones: creativity, empathy, complex problem-solving. My advice is to stay curious, keep learning, and embrace change.
+
+[03:19:00] Conference Host: Thank you, Jonathan. And thank you to all our speakers and attendees for making today's summit a success. We'll be sending out recordings and presentations tomorrow. Safe travels, and see you next year!
+
+[03:19:30] [END OF CONFERENCE MAIN SESSIONS]
+
+[03:30:00] [NETWORKING SESSION BEGINS]
+
+[03:30:30] Participant Alex Turner: That was quite a day. I'm Alex, by the way. I work in product management at a fintech startup.
+
+[03:30:45] Participant Dana Foster: Nice to meet you, Alex. I'm Dana. I'm a data scientist at a healthcare company. Dr. Sharma's comments about AI in healthcare really resonated with me.
+
+[03:31:15] Alex Turner: Yeah, the healthcare panel was fascinating. We're actually exploring AI for fraud detection in our payments platform. The financial services perspective from James Rodriguez was really helpful.
+
+[03:31:45] Dana Foster: Fraud detection seems like a great use case. Clear signal, measurable outcomes. What approach are you taking?
+
+[03:32:15] Alex Turner: We started with rule-based systems, which caught obvious fraud but missed sophisticated attacks. Now we're layering in machine learning. The challenge is balancing false positives and false negatives. Too many false positives and we annoy good customers; too many false negatives and we let fraud through.
+
+[03:32:45] Dana Foster: Sounds like a classic precision-recall tradeoff. In healthcare, we face similar challenges. A false negative in cancer screening is potentially fatal, but false positives lead to unnecessary procedures and anxiety.
+
+[03:33:15] Alex Turner: Exactly. Have you found good solutions for the explainability problem? Our compliance team wants to understand why the AI flags certain transactions.
+
+[03:33:45] Dana Foster: We use several techniques. Feature importance analysis shows which factors contributed most to a prediction. We also use counterfactual explanations – showing what would need to change for a different outcome. For really high-stakes decisions, we always have human review.
+
+[03:34:15] Alex Turner: That's helpful. I should probably connect with your compliance team. Cross-industry perspectives could be valuable.
+
+[03:34:30] Participant Jordan Martinez: Mind if I join you? I'm Jordan from an autonomous vehicle company. I couldn't help overhearing your conversation about explainability.
+
+[03:34:45] Dana Foster: Please, join us. I was impressed by Sarah Kim's presentation on autonomous vehicles. That's cutting-edge stuff.
+
+[03:35:15] Jordan Martinez: Thanks. Explainability is huge for us. When a car makes a decision, especially in an edge case, we need to understand why. Not just for regulatory reasons, but to improve the system.
+
+[03:35:45] Jordan Martinez: We've built extensive logging and visualization tools. Every decision the AI makes is recorded with the sensory inputs that led to it. If something goes wrong, we can replay the scenario and understand what happened.
+
+[03:36:15] Alex Turner: That sounds expensive from a storage perspective.
+
+
+[03:15:45] Jonathan Blake: I'll close with this thought. We're living through one of the most significant technological transitions in human history. AI will transform every industry, every job, every aspect of how we live. The decisions we make now – as technologists, as business leaders, as a society – will shape that future.
+
+[03:16:30] Jonathan Blake: Let's make it a future we can be proud of. Thank you.
+
+[03:16:45] Conference Host: Thank you, Jonathan, for that inspiring keynote. Before we close, let's have a brief Q&A.
+
+[03:17:00] Audience Member 5: Jonathan, what advice would you give to someone starting an AI company today?
+
+[03:17:15] Jonathan Blake: Great question. First, solve a real problem. Don't start with the technology and look for applications; start with a problem and find the best solution. Second, get to customers fast. The best way to learn is by putting something in users' hands and getting feedback. Third, build a great team. AI is competitive, and talent is your biggest asset. Finally, be patient. Building a great company takes time.
+
+[03:18:00] Audience Member 6: How do you think AI will change the job market over the next 10 years?
+
+[03:18:15] Jonathan Blake: I think we'll see significant shifts. Some jobs will be automated, particularly routine tasks that follow clear rules. But new jobs will emerge – AI trainers, AI ethicists, AI product managers, to name a few. The most valuable skills will be uniquely human ones: creativity, empathy, complex problem-solving. My advice is to stay curious, keep learning, and embrace change.
+
+[03:19:00] Conference Host: Thank you, Jonathan. And thank you to all our speakers and attendees for making today's summit a success. We'll be sending out recordings and presentations tomorrow. Safe travels, and see you next year!
+
+[03:19:30] [END OF CONFERENCE MAIN SESSIONS]
+
+[03:30:00] [NETWORKING SESSION BEGINS]
+
+[03:30:30] Participant Alex Turner: That was quite a day. I'm Alex, by the way. I work in product management at a fintech startup.
+
+[03:30:45] Participant Dana Foster: Nice to meet you, Alex. I'm Dana. I'm a data scientist at a healthcare company. Dr. Sharma's comments about AI in healthcare really resonated with me.
+
+[03:31:15] Alex Turner: Yeah, the healthcare panel was fascinating. We're actually exploring AI for fraud detection in our payments platform. The financial services perspective from James Rodriguez was really helpful.
+
+[03:31:45] Dana Foster: Fraud detection seems like a great use case. Clear signal, measurable outcomes. What approach are you taking?
+
+[03:32:15] Alex Turner: We started with rule-based systems, which caught obvious fraud but missed sophisticated attacks. Now we're layering in machine learning. The challenge is balancing false positives and false negatives. Too many false positives and we annoy good customers; too many false negatives and we let fraud through.
+
+[03:32:45] Dana Foster: Sounds like a classic precision-recall tradeoff. In healthcare, we face similar challenges. A false negative in cancer screening is potentially fatal, but false positives lead to unnecessary procedures and anxiety.
+
+[03:33:15] Alex Turner: Exactly. Have you found good solutions for the explainability problem? Our compliance team wants to understand why the AI flags certain transactions.
+
+[03:33:45] Dana Foster: We use several techniques. Feature importance analysis shows which factors contributed most to a prediction. We also use counterfactual explanations – showing what would need to change for a different outcome. For really high-stakes decisions, we always have human review.
+
+[03:34:15] Alex Turner: That's helpful. I should probably connect with your compliance team. Cross-industry perspectives could be valuable.
+
+[03:34:30] Participant Jordan Martinez: Mind if I join you? I'm Jordan from an autonomous vehicle company. I couldn't help overhearing your conversation about explainability.
+
+[03:34:45] Dana Foster: Please, join us. I was impressed by Sarah Kim's presentation on autonomous vehicles. That's cutting-edge stuff.
+
+[03:35:15] Jordan Martinez: Thanks. Explainability is huge for us. When a car makes a decision, especially in an edge case, we need to understand why. Not just for regulatory reasons, but to improve the system.
+
+[03:35:45] Jordan Martinez: We've built extensive logging and visualization tools. Every decision the AI makes is recorded with the sensory inputs that led to it. If something goes wrong, we can replay the scenario and understand what happened.
+
+[03:36:15] Alex Turner: That sounds expensive from a storage perspective.
+
+
+[03:15:45] Jonathan Blake: I'll close with this thought. We're living through one of the most significant technological transitions in human history. AI will transform every industry, every job, every aspect of how we live. The decisions we make now – as technologists, as business leaders, as a society – will shape that future.
+
+[03:16:30] Jonathan Blake: Let's make it a future we can be proud of. Thank you.
+
+[03:16:45] Conference Host: Thank you, Jonathan, for that inspiring keynote. Before we close, let's have a brief Q&A.
+
+[03:17:00] Audience Member 5: Jonathan, what advice would you give to someone starting an AI company today?
+
+[03:17:15] Jonathan Blake: Great question. First, solve a real problem. Don't start with the technology and look for applications; start with a problem and find the best solution. Second, get to customers fast. The best way to learn is by putting something in users' hands and getting feedback. Third, build a great team. AI is competitive, and talent is your biggest asset. Finally, be patient. Building a great company takes time.
+
+[03:18:00] Audience Member 6: How do you think AI will change the job market over the next 10 years?
+
+[03:18:15] Jonathan Blake: I think we'll see significant shifts. Some jobs will be automated, particularly routine tasks that follow clear rules. But new jobs will emerge – AI trainers, AI ethicists, AI product managers, to name a few. The most valuable skills will be uniquely human ones: creativity, empathy, complex problem-solving. My advice is to stay curious, keep learning, and embrace change.
+
+[03:19:00] Conference Host: Thank you, Jonathan. And thank you to all our speakers and attendees for making today's summit a success. We'll be sending out recordings and presentations tomorrow. Safe travels, and see you next year!
+
+[03:19:30] [END OF CONFERENCE MAIN SESSIONS]
+
+[03:30:00] [NETWORKING SESSION BEGINS]
+
+[03:30:30] Participant Alex Turner: That was quite a day. I'm Alex, by the way. I work in product management at a fintech startup.
+
+[03:30:45] Participant Dana Foster: Nice to meet you, Alex. I'm Dana. I'm a data scientist at a healthcare company. Dr. Sharma's comments about AI in healthcare really resonated with me.
+
+[03:31:15] Alex Turner: Yeah, the healthcare panel was fascinating. We're actually exploring AI for fraud detection in our payments platform. The financial services perspective from James Rodriguez was really helpful.
+
+[03:31:45] Dana Foster: Fraud detection seems like a great use case. Clear signal, measurable outcomes. What approach are you taking?
+
+[03:32:15] Alex Turner: We started with rule-based systems, which caught obvious fraud but missed sophisticated attacks. Now we're layering in machine learning. The challenge is balancing false positives and false negatives. Too many false positives and we annoy good customers; too many false negatives and we let fraud through.
+
+[03:32:45] Dana Foster: Sounds like a classic precision-recall tradeoff. In healthcare, we face similar challenges. A false negative in cancer screening is potentially fatal, but false positives lead to unnecessary procedures and anxiety.
+
+[03:33:15] Alex Turner: Exactly. Have you found good solutions for the explainability problem? Our compliance team wants to understand why the AI flags certain transactions.
+
+[03:33:45] Dana Foster: We use several techniques. Feature importance analysis shows which factors contributed most to a prediction. We also use counterfactual explanations – showing what would need to change for a different outcome. For really high-stakes decisions, we always have human review.
+
+[03:34:15] Alex Turner: That's helpful. I should probably connect with your compliance team. Cross-industry perspectives could be valuable.
+
+[03:34:30] Participant Jordan Martinez: Mind if I join you? I'm Jordan from an autonomous vehicle company. I couldn't help overhearing your conversation about explainability.
+
+[03:34:45] Dana Foster: Please, join us. I was impressed by Sarah Kim's presentation on autonomous vehicles. That's cutting-edge stuff.
+
+[03:35:15] Jordan Martinez: Thanks. Explainability is huge for us. When a car makes a decision, especially in an edge case, we need to understand why. Not just for regulatory reasons, but to improve the system.
+
+[03:35:45] Jordan Martinez: We've built extensive logging and visualization tools. Every decision the AI makes is recorded with the sensory inputs that led to it. If something goes wrong, we can replay the scenario and understand what happened.
+
+[03:36:15] Alex Turner: That sounds expensive from a storage perspective.
+
+
+[03:15:45] Jonathan Blake: I'll close with this thought. We're living through one of the most significant technological transitions in human history. AI will transform every industry, every job, every aspect of how we live. The decisions we make now – as technologists, as business leaders, as a society – will shape that future.
+
+[03:16:30] Jonathan Blake: Let's make it a future we can be proud of. Thank you.
+
+[03:16:45] Conference Host: Thank you, Jonathan, for that inspiring keynote. Before we close, let's have a brief Q&A.
+
+[03:17:00] Audience Member 5: Jonathan, what advice would you give to someone starting an AI company today?
+
+[03:17:15] Jonathan Blake: Great question. First, solve a real problem. Don't start with the technology and look for applications; start with a problem and find the best solution. Second, get to customers fast. The best way to learn is by putting something in users' hands and getting feedback. Third, build a great team. AI is competitive, and talent is your biggest asset. Finally, be patient. Building a great company takes time.
+
+[03:18:00] Audience Member 6: How do you think AI will change the job market over the next 10 years?
+
+[03:18:15] Jonathan Blake: I think we'll see significant shifts. Some jobs will be automated, particularly routine tasks that follow clear rules. But new jobs will emerge – AI trainers, AI ethicists, AI product managers, to name a few. The most valuable skills will be uniquely human ones: creativity, empathy, complex problem-solving. My advice is to stay curious, keep learning, and embrace change.
+
+[03:19:00] Conference Host: Thank you, Jonathan. And thank you to all our speakers and attendees for making today's summit a success. We'll be sending out recordings and presentations tomorrow. Safe travels, and see you next year!
+
+[03:19:30] [END OF CONFERENCE MAIN SESSIONS]
+
+[03:30:00] [NETWORKING SESSION BEGINS]
+
+[03:30:30] Participant Alex Turner: That was quite a day. I'm Alex, by the way. I work in product management at a fintech startup.
+
+[03:30:45] Participant Dana Foster: Nice to meet you, Alex. I'm Dana. I'm a data scientist at a healthcare company. Dr. Sharma's comments about AI in healthcare really resonated with me.
+
+[03:31:15] Alex Turner: Yeah, the healthcare panel was fascinating. We're actually exploring AI for fraud detection in our payments platform. The financial services perspective from James Rodriguez was really helpful.
+
+[03:31:45] Dana Foster: Fraud detection seems like a great use case. Clear signal, measurable outcomes. What approach are you taking?
+
+[03:32:15] Alex Turner: We started with rule-based systems, which caught obvious fraud but missed sophisticated attacks. Now we're layering in machine learning. The challenge is balancing false positives and false negatives. Too many false positives and we annoy good customers; too many false negatives and we let fraud through.
+
+[03:32:45] Dana Foster: Sounds like a classic precision-recall tradeoff. In healthcare, we face similar challenges. A false negative in cancer screening is potentially fatal, but false positives lead to unnecessary procedures and anxiety.
+
+[03:33:15] Alex Turner: Exactly. Have you found good solutions for the explainability problem? Our compliance team wants to understand why the AI flags certain transactions.
+
+[03:33:45] Dana Foster: We use several techniques. Feature importance analysis shows which factors contributed most to a prediction. We also use counterfactual explanations – showing what would need to change for a different outcome. For really high-stakes decisions, we always have human review.
+
+[03:34:15] Alex Turner: That's helpful. I should probably connect with your compliance team. Cross-industry perspectives could be valuable.
+
+[03:34:30] Participant Jordan Martinez: Mind if I join you? I'm Jordan from an autonomous vehicle company. I couldn't help overhearing your conversation about explainability.
+
+[03:34:45] Dana Foster: Please, join us. I was impressed by Sarah Kim's presentation on autonomous vehicles. That's cutting-edge stuff.
+
+[03:35:15] Jordan Martinez: Thanks. Explainability is huge for us. When a car makes a decision, especially in an edge case, we need to understand why. Not just for regulatory reasons, but to improve the system.
+
+[03:35:45] Jordan Martinez: We've built extensive logging and visualization tools. Every decision the AI makes is recorded with the sensory inputs that led to it. If something goes wrong, we can replay the scenario and understand what happened.
+
+[03:36:15] Alex Turner: That sounds expensive from a storage perspective.
+
+
+[03:15:45] Jonathan Blake: I'll close with this thought. We're living through one of the most significant technological transitions in human history. AI will transform every industry, every job, every aspect of how we live. The decisions we make now – as technologists, as business leaders, as a society – will shape that future.
+
+[03:16:30] Jonathan Blake: Let's make it a future we can be proud of. Thank you.
+
+[03:16:45] Conference Host: Thank you, Jonathan, for that inspiring keynote. Before we close, let's have a brief Q&A.
+
+[03:17:00] Audience Member 5: Jonathan, what advice would you give to someone starting an AI company today?
+
+[03:17:15] Jonathan Blake: Great question. First, solve a real problem. Don't start with the technology and look for applications; start with a problem and find the best solution. Second, get to customers fast. The best way to learn is by putting something in users' hands and getting feedback. Third, build a great team. AI is competitive, and talent is your biggest asset. Finally, be patient. Building a great company takes time.
+
+[03:18:00] Audience Member 6: How do you think AI will change the job market over the next 10 years?
+
+[03:18:15] Jonathan Blake: I think we'll see significant shifts. Some jobs will be automated, particularly routine tasks that follow clear rules. But new jobs will emerge – AI trainers, AI ethicists, AI product managers, to name a few. The most valuable skills will be uniquely human ones: creativity, empathy, complex problem-solving. My advice is to stay curious, keep learning, and embrace change.
+
+[03:19:00] Conference Host: Thank you, Jonathan. And thank you to all our speakers and attendees for making today's summit a success. We'll be sending out recordings and presentations tomorrow. Safe travels, and see you next year!
+
+[03:19:30] [END OF CONFERENCE MAIN SESSIONS]
+
+[03:30:00] [NETWORKING SESSION BEGINS]
+
+[03:30:30] Participant Alex Turner: That was quite a day. I'm Alex, by the way. I work in product management at a fintech startup.
+
+[03:30:45] Participant Dana Foster: Nice to meet you, Alex. I'm Dana. I'm a data scientist at a healthcare company. Dr. Sharma's comments about AI in healthcare really resonated with me.
+
+[03:31:15] Alex Turner: Yeah, the healthcare panel was fascinating. We're actually exploring AI for fraud detection in our payments platform. The financial services perspective from James Rodriguez was really helpful.
+
+[03:31:45] Dana Foster: Fraud detection seems like a great use case. Clear signal, measurable outcomes. What approach are you taking?
+
+[03:32:15] Alex Turner: We started with rule-based systems, which caught obvious fraud but missed sophisticated attacks. Now we're layering in machine learning. The challenge is balancing false positives and false negatives. Too many false positives and we annoy good customers; too many false negatives and we let fraud through.
+
+[03:32:45] Dana Foster: Sounds like a classic precision-recall tradeoff. In healthcare, we face similar challenges. A false negative in cancer screening is potentially fatal, but false positives lead to unnecessary procedures and anxiety.
+
+[03:33:15] Alex Turner: Exactly. Have you found good solutions for the explainability problem? Our compliance team wants to understand why the AI flags certain transactions.
+
+[03:33:45] Dana Foster: We use several techniques. Feature importance analysis shows which factors contributed most to a prediction. We also use counterfactual explanations – showing what would need to change for a different outcome. For really high-stakes decisions, we always have human review.
+
+[03:34:15] Alex Turner: That's helpful. I should probably connect with your compliance team. Cross-industry perspectives could be valuable.
+
+[03:34:30] Participant Jordan Martinez: Mind if I join you? I'm Jordan from an autonomous vehicle company. I couldn't help overhearing your conversation about explainability.
+
+[03:34:45] Dana Foster: Please, join us. I was impressed by Sarah Kim's presentation on autonomous vehicles. That's cutting-edge stuff.
+
+[03:35:15] Jordan Martinez: Thanks. Explainability is huge for us. When a car makes a decision, especially in an edge case, we need to understand why. Not just for regulatory reasons, but to improve the system.
+
+[03:35:45] Jordan Martinez: We've built extensive logging and visualization tools. Every decision the AI makes is recorded with the sensory inputs that led to it. If something goes wrong, we can replay the scenario and understand what happened.
+
+[03:36:15] Alex Turner: That sounds expensive from a storage perspective.
+
 [03:36:45] Jordan Martinez: It is. We process petabytes of data. But the alternative – not understanding why our vehicles behave the way they do – is unacceptable. Safety is non-negotiable.
 
 [03:37:15] Dana Foster: I imagine the regulatory environment is intense.
