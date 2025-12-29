@@ -1,7 +1,7 @@
 // Long transcription sample for long context testing (~15-20k tokens)
 // This simulates a full-day business conference with multiple sessions
 
-export const LONG_TRANSCRIPTION = `
+export const LONG_TRANSCRIPTION = ``
 [00:00:00] Conference Host: Good morning everyone and welcome to the 2024 Annual Tech Innovation Summit. We have an incredible lineup of speakers and sessions planned for today. Before we begin, I'd like to thank our sponsors and all of you for being here. Let's make this a day of learning, networking, and inspiration.
 
 [00:01:00] Conference Host: Our first keynote speaker needs no introduction. She has been at the forefront of artificial intelligence research for over two decades and currently leads the AI research division at one of the world's most influential technology companies. Please welcome Dr. Elizabeth Chen.
@@ -400,5 +400,5 @@ export const LONG_TRANSCRIPTION = `
 
 [04:49:30] [END OF DEBRIEF]
 
-[05:00:00] [TRANSCRIPT ENDS]
+[05:00:00] [TRANSCRIPT ENDS]`
 `;
