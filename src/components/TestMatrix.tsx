@@ -459,7 +459,6 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                     variant="ghost"
                     size="sm"
                     onClick={() => runModelTests(model, groupType)}
-                    disabled={isRunningTests}
                     className="h-6 w-6 p-0 hover:bg-primary/20"
                     title={`Kör alla tester för ${model.id}`}
                   >
@@ -496,7 +495,6 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                         variant="ghost"
                         size="sm"
                         onClick={() => runTest(model, feature)}
-                        disabled={isRunningTests}
                         className="h-8 w-8 p-0 hover:bg-muted/50"
                       >
                         {getStatusIcon(testKey, feature.id)}
@@ -557,20 +555,15 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
             <div className="flex gap-3">
               <Button
                 onClick={runAllTests}
-                disabled={isRunningTests}
                 className="bg-primary hover:bg-primary/90"
               >
-                {isRunningTests ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Play className="h-4 w-4 mr-2" />
-                )}
-                {isRunningTests ? 'Kör tester...' : 'Kör alla tester'}
+                <Play className="h-4 w-4 mr-2" />
+                Kör alla tester
               </Button>
               <Button
                 variant="outline"
                 onClick={clearResults}
-                disabled={isRunningTests || testResults.size === 0}
+                disabled={testResults.size === 0}
                 className="border-border/50"
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
@@ -599,14 +592,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                           e.stopPropagation();
                           runGroupTests('chat');
                         }}
-                        disabled={isRunningTests}
                         className="mr-2"
                       >
-                        {isRunningTests ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <Play className="h-4 w-4 mr-2" />
-                        )}
+                        <Play className="h-4 w-4 mr-2" />
                         Testa alla
                       </Button>
                     </div>
@@ -627,7 +615,6 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => runFeatureTests(feature, 'chat')}
-                                      disabled={isRunningTests}
                                       className="h-5 w-5 p-0 hover:bg-primary/20"
                                       title={`Kör ${feature.name} för alla modeller`}
                                     >
@@ -663,14 +650,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                           e.stopPropagation();
                           runGroupTests('speech-to-text');
                         }}
-                        disabled={isRunningTests}
                         className="mr-2"
                       >
-                        {isRunningTests ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <Play className="h-4 w-4 mr-2" />
-                        )}
+                        <Play className="h-4 w-4 mr-2" />
                         Testa alla
                       </Button>
                     </div>
@@ -691,7 +673,6 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => runFeatureTests(feature, 'speech-to-text')}
-                                      disabled={isRunningTests}
                                       className="h-5 w-5 p-0 hover:bg-primary/20"
                                       title={`Kör ${feature.name} för alla modeller`}
                                     >
@@ -727,14 +708,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                           e.stopPropagation();
                           runGroupTests('ocr');
                         }}
-                        disabled={isRunningTests}
                         className="mr-2"
                       >
-                        {isRunningTests ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <Play className="h-4 w-4 mr-2" />
-                        )}
+                        <Play className="h-4 w-4 mr-2" />
                         Testa alla
                       </Button>
                     </div>
@@ -755,7 +731,6 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => runFeatureTests(feature, 'ocr')}
-                                      disabled={isRunningTests}
                                       className="h-5 w-5 p-0 hover:bg-primary/20"
                                       title={`Kör ${feature.name} för alla modeller`}
                                     >
@@ -791,14 +766,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                           e.stopPropagation();
                           runGroupTests('utility');
                         }}
-                        disabled={isRunningTests}
                         className="mr-2"
                       >
-                        {isRunningTests ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <Play className="h-4 w-4 mr-2" />
-                        )}
+                        <Play className="h-4 w-4 mr-2" />
                         Testa alla
                       </Button>
                     </div>
@@ -819,7 +789,6 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => runFeatureTests(feature, 'utility')}
-                                      disabled={isRunningTests}
                                       className="h-5 w-5 p-0 hover:bg-primary/20"
                                       title={`Kör ${feature.name} för alla modeller`}
                                     >
@@ -992,7 +961,6 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                     runTest(model, feature);
                   }
                 }}
-                disabled={isRunningTests}
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
                 Kör testet igen
