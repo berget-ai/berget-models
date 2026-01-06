@@ -410,7 +410,7 @@ export async function testBasicCompletion(model: Model, apiKey: string, baseUrl:
 
 export async function testTPS(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const userPrompt = formatPrompt(
-    "Write a detailed explanation of how neural networks work, including the concepts of layers, weights, biases, activation functions, backpropagation, and gradient descent. Please provide a comprehensive response with examples.",
+    "Write a detailed explanation of how neural networks work, including the concepts of layers, weights, biases, activation functions, backpropagation, and gradient descent. Please provide a comprehensive response with examples. Format your response as markdown with headers, bullet points, and code examples where appropriate.",
     model.id,
   );
   const requestBody = {
