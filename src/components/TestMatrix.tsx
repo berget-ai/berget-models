@@ -19,7 +19,6 @@ import {
   Play, 
   RotateCcw,
   Settings,
-  Zap,
   Minus,
   Circle,
   Info,
@@ -222,15 +221,38 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
 
   const runAllTests = async () => {
     setIsRunningTests(true);
+    const { chatModels, speechModels, ocrModels, utilityModels } = getModelsByType();
+    const sortedChatModels = [...chatModels].sort((a, b) => a.id.localeCompare(b.id));
+    const sortedSpeechModels = [...speechModels].sort((a, b) => a.id.localeCompare(b.id));
+    const sortedOcrModels = [...ocrModels].sort((a, b) => a.id.localeCompare(b.id));
+    const sortedUtilityModels = [...utilityModels].sort((a, b) => a.id.localeCompare(b.id));
     
-    for (const model of models) {
-      const relevantFeatures = TEST_FEATURES.filter(feature => 
-        feature.supportedTypes.includes(model.type || 'chat')
-      );
-      
+    // Kör i samma ordning som på skärmen
+    for (const model of sortedChatModels) {
+      const relevantFeatures = getFeaturesForGroupType('chat');
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
-        // Kort paus mellan tester för att undvika rate limiting
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    for (const model of sortedSpeechModels) {
+      const relevantFeatures = getFeaturesForGroupType('speech-to-text');
+      for (const feature of relevantFeatures) {
+        await runTest(model, feature);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    for (const model of sortedOcrModels) {
+      const relevantFeatures = getFeaturesForGroupType('ocr');
+      for (const feature of relevantFeatures) {
+        await runTest(model, feature);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    for (const model of sortedUtilityModels) {
+      const relevantFeatures = getFeaturesForGroupType('utility');
+      for (const feature of relevantFeatures) {
+        await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
@@ -254,11 +276,11 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
       return false;
     });
 
-    for (const model of groupModels) {
-      const relevantFeatures = TEST_FEATURES.filter(feature => 
-        feature.supportedTypes.includes(model.type || 'chat')
-      );
-      
+    // Sortera i samma ordning som på skärmen
+    const sortedModels = [...groupModels].sort((a, b) => a.id.localeCompare(b.id));
+    const relevantFeatures = getFeaturesForGroupType(groupType);
+
+    for (const model of sortedModels) {
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -268,7 +290,51 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     setIsRunningTests(false);
     toast({
       title: `${groupType === 'chat' ? 'Chat' : groupType === 'speech-to-text' ? 'Speech' : groupType === 'ocr' ? 'OCR' : 'Utility'} tester slutförda`,
-      description: `Testade ${groupModels.length} modeller`,
+      description: `Testade ${sortedModels.length} modeller`,
+    });
+  };
+
+  // Kör alla tester för en specifik modell (rad)
+  const runModelTests = async (model: Model, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+    setIsRunningTests(true);
+    const relevantFeatures = getFeaturesForGroupType(groupType);
+    
+    for (const feature of relevantFeatures) {
+      await runTest(model, feature);
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    setIsRunningTests(false);
+    toast({
+      title: "Modelltest slutfört",
+      description: `Alla tester för ${model.id} klara`,
+    });
+  };
+
+  // Kör ett specifikt test för alla modeller i gruppen (kolumn)
+  const runFeatureTests = async (feature: TestFeature, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+    setIsRunningTests(true);
+    
+    const groupModels = models.filter(model => {
+      const modelType = model.type || 'chat';
+      if (groupType === 'chat') return modelType === 'chat' || modelType === 'text';
+      if (groupType === 'speech-to-text') return modelType === 'speech-to-text';
+      if (groupType === 'utility') return modelType === 'rerank' || modelType === 'embedding';
+      if (groupType === 'ocr') return modelType === 'ocr';
+      return false;
+    });
+
+    const sortedModels = [...groupModels].sort((a, b) => a.id.localeCompare(b.id));
+    
+    for (const model of sortedModels) {
+      await runTest(model, feature);
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    setIsRunningTests(false);
+    toast({
+      title: `${feature.name} test slutfört`,
+      description: `Testat ${sortedModels.length} modeller`,
     });
   };
 
@@ -389,7 +455,16 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
             >
               <TableCell className="font-medium">
                 <div className="flex items-center space-x-2">
-                  <Zap className="h-4 w-4 text-primary" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => runModelTests(model, groupType)}
+                    disabled={isRunningTests}
+                    className="h-6 w-6 p-0 hover:bg-primary/20"
+                    title={`Kör alla tester för ${model.id}`}
+                  >
+                    <Play className="h-3 w-3 text-primary" />
+                  </Button>
                   <div>
                     <div className="font-semibold text-foreground">{model.id}</div>
                     <div className="text-xs text-muted-foreground">
@@ -547,7 +622,19 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                             {getFeaturesForGroupType('chat').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
-                                  <span className="font-semibold text-foreground">{feature.name}</span>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => runFeatureTests(feature, 'chat')}
+                                      disabled={isRunningTests}
+                                      className="h-5 w-5 p-0 hover:bg-primary/20"
+                                      title={`Kör ${feature.name} för alla modeller`}
+                                    >
+                                      <Play className="h-3 w-3 text-primary" />
+                                    </Button>
+                                    <span className="font-semibold text-foreground">{feature.name}</span>
+                                  </div>
                                   <span className="text-xs text-muted-foreground">{feature.description}</span>
                                 </div>
                               </TableHead>
@@ -599,7 +686,19 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                             {getFeaturesForGroupType('speech-to-text').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
-                                  <span className="font-semibold text-foreground">{feature.name}</span>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => runFeatureTests(feature, 'speech-to-text')}
+                                      disabled={isRunningTests}
+                                      className="h-5 w-5 p-0 hover:bg-primary/20"
+                                      title={`Kör ${feature.name} för alla modeller`}
+                                    >
+                                      <Play className="h-3 w-3 text-primary" />
+                                    </Button>
+                                    <span className="font-semibold text-foreground">{feature.name}</span>
+                                  </div>
                                   <span className="text-xs text-muted-foreground">{feature.description}</span>
                                 </div>
                               </TableHead>
@@ -651,7 +750,19 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                             {getFeaturesForGroupType('ocr').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
-                                  <span className="font-semibold text-foreground">{feature.name}</span>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => runFeatureTests(feature, 'ocr')}
+                                      disabled={isRunningTests}
+                                      className="h-5 w-5 p-0 hover:bg-primary/20"
+                                      title={`Kör ${feature.name} för alla modeller`}
+                                    >
+                                      <Play className="h-3 w-3 text-primary" />
+                                    </Button>
+                                    <span className="font-semibold text-foreground">{feature.name}</span>
+                                  </div>
                                   <span className="text-xs text-muted-foreground">{feature.description}</span>
                                 </div>
                               </TableHead>
@@ -703,7 +814,19 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                             {getFeaturesForGroupType('utility').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
                                 <div className="flex flex-col items-center space-y-1">
-                                  <span className="font-semibold text-foreground">{feature.name}</span>
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => runFeatureTests(feature, 'utility')}
+                                      disabled={isRunningTests}
+                                      className="h-5 w-5 p-0 hover:bg-primary/20"
+                                      title={`Kör ${feature.name} för alla modeller`}
+                                    >
+                                      <Play className="h-3 w-3 text-primary" />
+                                    </Button>
+                                    <span className="font-semibold text-foreground">{feature.name}</span>
+                                  </div>
                                   <span className="text-xs text-muted-foreground">{feature.description}</span>
                                 </div>
                               </TableHead>
