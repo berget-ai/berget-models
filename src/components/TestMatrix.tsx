@@ -581,22 +581,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
               {getModelsByType().chatModels.length > 0 && (
                 <AccordionItem value="chat" className="border border-border/50 rounded-lg">
                   <AccordionTrigger className="px-4 hover:no-underline">
-                    <div className="flex items-center justify-between w-full pr-4">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold">Chat Modeller</h3>
-                        <Badge variant="secondary">{getModelsByType().chatModels.length} modeller</Badge>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          runGroupTests('chat');
-                        }}
-                        className="mr-2"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Testa alla
-                      </Button>
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-semibold">Chat Modeller</h3>
+                      <Badge variant="secondary">{getModelsByType().chatModels.length} modeller</Badge>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
@@ -605,7 +592,14 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                         <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
                           <TableRow className="hover:bg-transparent">
                             <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
-                              Modell
+                              <Button
+                                size="sm"
+                                onClick={() => runGroupTests('chat')}
+                                className="gap-1"
+                              >
+                                <Play className="h-4 w-4" />
+                                Testa alla
+                              </Button>
                             </TableHead>
                             {getFeaturesForGroupType('chat').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
@@ -639,22 +633,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
               {getModelsByType().speechModels.length > 0 && (
                 <AccordionItem value="speech" className="border border-border/50 rounded-lg">
                   <AccordionTrigger className="px-4 hover:no-underline">
-                    <div className="flex items-center justify-between w-full pr-4">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold">Speech-to-Text Modeller</h3>
-                        <Badge variant="secondary">{getModelsByType().speechModels.length} modeller</Badge>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          runGroupTests('speech-to-text');
-                        }}
-                        className="mr-2"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Testa alla
-                      </Button>
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-semibold">Speech-to-Text Modeller</h3>
+                      <Badge variant="secondary">{getModelsByType().speechModels.length} modeller</Badge>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
@@ -663,7 +644,14 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                         <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
                           <TableRow className="hover:bg-transparent">
                             <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
-                              Modell
+                              <Button
+                                size="sm"
+                                onClick={() => runGroupTests('speech-to-text')}
+                                className="gap-1"
+                              >
+                                <Play className="h-4 w-4" />
+                                Testa alla
+                              </Button>
                             </TableHead>
                             {getFeaturesForGroupType('speech-to-text').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
@@ -697,22 +685,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
               {getModelsByType().ocrModels.length > 0 && (
                 <AccordionItem value="ocr" className="border border-border/50 rounded-lg">
                   <AccordionTrigger className="px-4 hover:no-underline">
-                    <div className="flex items-center justify-between w-full pr-4">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold">OCR Modeller</h3>
-                        <Badge variant="secondary">{getModelsByType().ocrModels.length} modeller</Badge>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          runGroupTests('ocr');
-                        }}
-                        className="mr-2"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Testa alla
-                      </Button>
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-semibold">OCR Modeller</h3>
+                      <Badge variant="secondary">{getModelsByType().ocrModels.length} modeller</Badge>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
@@ -721,7 +696,14 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                         <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
                           <TableRow className="hover:bg-transparent">
                             <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
-                              Modell
+                              <Button
+                                size="sm"
+                                onClick={() => runGroupTests('ocr')}
+                                className="gap-1"
+                              >
+                                <Play className="h-4 w-4" />
+                                Testa alla
+                              </Button>
                             </TableHead>
                             {getFeaturesForGroupType('ocr').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
@@ -755,22 +737,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
               {getModelsByType().utilityModels.length > 0 && (
                 <AccordionItem value="utility" className="border border-border/50 rounded-lg">
                   <AccordionTrigger className="px-4 hover:no-underline">
-                    <div className="flex items-center justify-between w-full pr-4">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold">Utility Modeller (Rerank & Embedding)</h3>
-                        <Badge variant="secondary">{getModelsByType().utilityModels.length} modeller</Badge>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          runGroupTests('utility');
-                        }}
-                        className="mr-2"
-                      >
-                        <Play className="h-4 w-4 mr-2" />
-                        Testa alla
-                      </Button>
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-semibold">Utility Modeller (Rerank & Embedding)</h3>
+                      <Badge variant="secondary">{getModelsByType().utilityModels.length} modeller</Badge>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
@@ -779,7 +748,14 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                         <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
                           <TableRow className="hover:bg-transparent">
                             <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
-                              Modell
+                              <Button
+                                size="sm"
+                                onClick={() => runGroupTests('utility')}
+                                className="gap-1"
+                              >
+                                <Play className="h-4 w-4" />
+                                Testa alla
+                              </Button>
                             </TableHead>
                             {getFeaturesForGroupType('utility').map((feature) => (
                               <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
