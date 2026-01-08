@@ -555,7 +555,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
             <div className="flex gap-3">
               <Button
                 onClick={runAllTests}
-                className="bg-primary hover:bg-primary/90"
+                className="bg-[hsl(40,30%,92%)] text-black hover:bg-[hsl(40,30%,85%)]"
               >
                 <Play className="h-4 w-4 mr-2" />
                 Kör alla tester
@@ -595,7 +595,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                               <Button
                                 size="sm"
                                 onClick={() => runGroupTests('chat')}
-                                className="gap-1"
+                                className="gap-1 bg-[hsl(40,30%,92%)] text-black hover:bg-[hsl(40,30%,85%)]"
                               >
                                 <Play className="h-4 w-4" />
                                 Testa alla
@@ -647,7 +647,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                               <Button
                                 size="sm"
                                 onClick={() => runGroupTests('speech-to-text')}
-                                className="gap-1"
+                                className="gap-1 bg-[hsl(40,30%,92%)] text-black hover:bg-[hsl(40,30%,85%)]"
                               >
                                 <Play className="h-4 w-4" />
                                 Testa alla
@@ -699,7 +699,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                               <Button
                                 size="sm"
                                 onClick={() => runGroupTests('ocr')}
-                                className="gap-1"
+                                className="gap-1 bg-[hsl(40,30%,92%)] text-black hover:bg-[hsl(40,30%,85%)]"
                               >
                                 <Play className="h-4 w-4" />
                                 Testa alla
@@ -751,7 +751,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                               <Button
                                 size="sm"
                                 onClick={() => runGroupTests('utility')}
-                                className="gap-1"
+                                className="gap-1 bg-[hsl(40,30%,92%)] text-black hover:bg-[hsl(40,30%,85%)]"
                               >
                                 <Play className="h-4 w-4" />
                                 Testa alla
