@@ -483,21 +483,34 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
           .map((model) => (
             <TableRow 
               key={model.id} 
-              className="border-border/30 hover:bg-muted/30 transition-colors"
+              className={`border-border/30 transition-colors ${model.isUp === false ? 'opacity-40' : 'hover:bg-muted/30'}`}
             >
               <TableCell className="font-medium">
                 <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => runModelTests(model, groupType)}
-                    className="h-6 w-6 p-0 hover:bg-primary/20"
-                    title={`Kör alla tester för ${model.id}`}
-                  >
-                    <Play className="h-3 w-3 text-primary" />
-                  </Button>
+                  {model.isUp !== false ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => runModelTests(model, groupType)}
+                      className="h-6 w-6 p-0 hover:bg-primary/20"
+                      title={`Kör alla tester för ${model.id}`}
+                    >
+                      <Play className="h-3 w-3 text-primary" />
+                    </Button>
+                  ) : (
+                    <div className="h-6 w-6 flex items-center justify-center">
+                      <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+                    </div>
+                  )}
                   <div>
-                    <div className="font-semibold text-foreground">{model.id}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">{model.id}</span>
+                      {model.isUp === false && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-muted-foreground/30 text-muted-foreground">
+                          offline
+                        </Badge>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {model.owned_by} • {model.type}
                     </div>
