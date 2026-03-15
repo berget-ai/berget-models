@@ -260,7 +260,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     const sortedUtilityModels = [...utilityModels].sort((a, b) => a.id.localeCompare(b.id));
     
     // Kör i samma ordning som på skärmen
-    for (const model of sortedChatModels) {
+    for (const model of sortedChatModels.filter(m => m.isUp !== false)) {
       const relevantFeatures = getFeaturesForGroupType('chat');
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
