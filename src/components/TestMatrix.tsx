@@ -27,7 +27,11 @@ import {
 import { Model, TestResult, TestFeature, TestDetail } from '../types/model';
 import { 
   fetchModels, 
-  testToolUse, 
+  testToolUse,
+  testToolUseMultiParam,
+  testToolUseMultiTool,
+  testToolUseComplexSchema,
+  testToolUseParallel,
   testJsonSupport,
   testJsonSchema, 
   testBasicCompletion,
