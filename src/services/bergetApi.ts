@@ -256,7 +256,7 @@ export async function testToolUseMultiParam(model: Model, apiKey: string, baseUr
       const args = JSON.parse(toolCalls[0].function.arguments);
       const subResults: import("../types/model").SubResult[] = [];
       
-      const fields = [
+      const requiredFields = [
         { key: "origin", label: "Avgångsort", expected: "Stockholm" },
         { key: "destination", label: "Destination", expected: "Tokyo" },
         { key: "date", label: "Datum", expected: "2025-06-15" },
@@ -264,24 +264,30 @@ export async function testToolUseMultiParam(model: Model, apiKey: string, baseUr
         { key: "passengers", label: "Passagerare", expected: 2 },
       ];
 
+      const optionalFields = [
+        { key: "return_date", label: "Returdatum" },
+      ];
+
       let allOk = true;
-      for (const f of fields) {
+      for (const f of requiredFields) {
         const val = args[f.key];
         const ok = val !== undefined && val !== null;
         const matchExpected = String(val).toLowerCase() === String(f.expected).toLowerCase();
         if (!ok) allOk = false;
-        subResults.push({ name: f.label, success: ok, message: ok ? `${f.key}=${val}${matchExpected ? " ✓" : ` (förväntat: ${f.expected})`}` : `Saknas` });
+        subResults.push({ name: `[required] ${f.label}`, success: ok, message: ok ? `${f.key}=${val}${matchExpected ? " ✓" : ` (förväntat: ${f.expected})`}` : `Saknas — required fält` });
       }
 
-      // Check optional return_date
-      if (args.return_date) {
-        subResults.push({ name: "Returdatum (optional)", success: true, message: `return_date=${args.return_date}` });
+      for (const f of optionalFields) {
+        const val = args[f.key];
+        const present = val !== undefined && val !== null;
+        subResults.push({ name: `[optional] ${f.label}`, success: true, message: present ? `${f.key}=${val}` : `Ej angiven (ok — optional)` });
       }
 
       const validEnum = ["economy", "premium_economy", "business", "first"].includes(args.cabin_class);
       if (!validEnum) allOk = false;
 
-      return { success: allOk && validEnum, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `${subResults.filter(s => s.success).length}/${fields.length} parametrar korrekta`, subResults };
+      const reqOk = subResults.filter(s => s.name.startsWith("[required]") && s.success).length;
+      return { success: allOk && validEnum, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `${reqOk}/${requiredFields.length} required ok, ${optionalFields.length} optional`, subResults };
     } catch {
       return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Failed to parse tool arguments" };
     }
