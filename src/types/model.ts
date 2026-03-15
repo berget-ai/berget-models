@@ -4,6 +4,7 @@ export interface Model {
   created: number;
   owned_by: string;
   type?: 'chat' | 'text' | 'embedding' | 'rerank' | 'speech-to-text' | 'ocr';
+  isUp?: boolean;
 }
 
 export interface TestResult {
