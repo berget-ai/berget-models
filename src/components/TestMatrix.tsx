@@ -267,21 +267,21 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
-    for (const model of sortedSpeechModels) {
+    for (const model of sortedSpeechModels.filter(m => m.isUp !== false)) {
       const relevantFeatures = getFeaturesForGroupType('speech-to-text');
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
-    for (const model of sortedOcrModels) {
+    for (const model of sortedOcrModels.filter(m => m.isUp !== false)) {
       const relevantFeatures = getFeaturesForGroupType('ocr');
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
-    for (const model of sortedUtilityModels) {
+    for (const model of sortedUtilityModels.filter(m => m.isUp !== false)) {
       const relevantFeatures = getFeaturesForGroupType('utility');
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
