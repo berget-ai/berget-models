@@ -260,28 +260,28 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     const sortedUtilityModels = [...utilityModels].sort((a, b) => a.id.localeCompare(b.id));
     
     // Kör i samma ordning som på skärmen
-    for (const model of sortedChatModels) {
+    for (const model of sortedChatModels.filter(m => m.isUp !== false)) {
       const relevantFeatures = getFeaturesForGroupType('chat');
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
-    for (const model of sortedSpeechModels) {
+    for (const model of sortedSpeechModels.filter(m => m.isUp !== false)) {
       const relevantFeatures = getFeaturesForGroupType('speech-to-text');
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
-    for (const model of sortedOcrModels) {
+    for (const model of sortedOcrModels.filter(m => m.isUp !== false)) {
       const relevantFeatures = getFeaturesForGroupType('ocr');
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
-    for (const model of sortedUtilityModels) {
+    for (const model of sortedUtilityModels.filter(m => m.isUp !== false)) {
       const relevantFeatures = getFeaturesForGroupType('utility');
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
@@ -312,7 +312,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     const sortedModels = [...groupModels].sort((a, b) => a.id.localeCompare(b.id));
     const relevantFeatures = getFeaturesForGroupType(groupType);
 
-    for (const model of sortedModels) {
+    for (const model of sortedModels.filter(m => m.isUp !== false)) {
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -483,21 +483,34 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
           .map((model) => (
             <TableRow 
               key={model.id} 
-              className="border-border/30 hover:bg-muted/30 transition-colors"
+              className={`border-border/30 transition-colors ${model.isUp === false ? 'opacity-40' : 'hover:bg-muted/30'}`}
             >
               <TableCell className="font-medium">
                 <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => runModelTests(model, groupType)}
-                    className="h-6 w-6 p-0 hover:bg-primary/20"
-                    title={`Kör alla tester för ${model.id}`}
-                  >
-                    <Play className="h-3 w-3 text-primary" />
-                  </Button>
+                  {model.isUp !== false ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => runModelTests(model, groupType)}
+                      className="h-6 w-6 p-0 hover:bg-primary/20"
+                      title={`Kör alla tester för ${model.id}`}
+                    >
+                      <Play className="h-3 w-3 text-primary" />
+                    </Button>
+                  ) : (
+                    <div className="h-6 w-6 flex items-center justify-center">
+                      <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+                    </div>
+                  )}
                   <div>
-                    <div className="font-semibold text-foreground">{model.id}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">{model.id}</span>
+                      {model.isUp === false && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-muted-foreground/30 text-muted-foreground">
+                          offline
+                        </Badge>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground">
                       {model.owned_by} • {model.type}
                     </div>
@@ -510,7 +523,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                 
                 return (
                   <TableCell key={feature.id} className="text-center">
-                    {result && (result.status === 'success' || result.status === 'error') ? (
+                    {model.isUp === false ? (
+                      <span className="text-xs text-muted-foreground/50">—</span>
+                    ) : result && (result.status === 'success' || result.status === 'error') ? (
                       <Button
                         variant="ghost"
                         size="sm"

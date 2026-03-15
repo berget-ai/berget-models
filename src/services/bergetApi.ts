@@ -54,6 +54,7 @@ export async function fetchModels(apiKey: string, baseUrl: string): Promise<Mode
   const models = data.data || [];
   const mappedModels = models.map((model: any) => ({
     ...model,
+    isUp: model.status?.up !== false,
     type:
       model.model_type === "text"
         ? "chat"
