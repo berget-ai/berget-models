@@ -639,12 +639,39 @@ export async function testToolUseParallel(model: Model, apiKey: string, baseUrl:
     const hasCurrency = calledTools.includes("convert_currency");
     const hasTranslate = calledTools.includes("translate_text");
 
+    const subResults: import("../types/model").SubResult[] = [];
+    
+    const weatherCall = toolCalls.find((tc: any) => tc.function.name === "get_weather");
+    subResults.push({
+      name: "get_weather",
+      success: hasWeather,
+      message: hasWeather ? `args: ${weatherCall?.function?.arguments}` : "Inte anropad",
+      response: weatherCall ? JSON.parse(weatherCall.function.arguments) : undefined,
+    });
+
+    const currencyCall = toolCalls.find((tc: any) => tc.function.name === "convert_currency");
+    subResults.push({
+      name: "convert_currency",
+      success: hasCurrency,
+      message: hasCurrency ? `args: ${currencyCall?.function?.arguments}` : "Inte anropad",
+      response: hasCurrency ? JSON.parse(currencyCall.function.arguments) : undefined,
+    });
+
+    const translateCall = toolCalls.find((tc: any) => tc.function.name === "translate_text");
+    subResults.push({
+      name: "translate_text",
+      success: hasTranslate,
+      message: hasTranslate ? `args: ${translateCall?.function?.arguments}` : "Inte anropad",
+      response: hasTranslate ? JSON.parse(translateCall.function.arguments) : undefined,
+    });
+
     return {
       success: uniqueTools.size >= 3,
       curlCommand,
       response: data,
       tokensPerSecond: calculateTPS(data, duration),
-      message: `${uniqueTools.size}/3 parallel calls: weather${hasWeather ? "✓" : "✗"} currency${hasCurrency ? "✓" : "✗"} translate${hasTranslate ? "✓" : "✗"}`,
+      message: `${uniqueTools.size}/3 parallella anrop`,
+      subResults,
     };
   } catch (error) {
     return { success: false, curlCommand, errorCode: "NETWORK_ERROR", message: error instanceof Error ? error.message : "Unknown error" };
