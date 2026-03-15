@@ -256,7 +256,7 @@ export async function testToolUseMultiParam(model: Model, apiKey: string, baseUr
       const args = JSON.parse(toolCalls[0].function.arguments);
       const subResults: import("../types/model").SubResult[] = [];
       
-      const fields = [
+      const requiredFields = [
         { key: "origin", label: "Avgångsort", expected: "Stockholm" },
         { key: "destination", label: "Destination", expected: "Tokyo" },
         { key: "date", label: "Datum", expected: "2025-06-15" },
@@ -264,24 +264,30 @@ export async function testToolUseMultiParam(model: Model, apiKey: string, baseUr
         { key: "passengers", label: "Passagerare", expected: 2 },
       ];
 
+      const optionalFields = [
+        { key: "return_date", label: "Returdatum" },
+      ];
+
       let allOk = true;
-      for (const f of fields) {
+      for (const f of requiredFields) {
         const val = args[f.key];
         const ok = val !== undefined && val !== null;
         const matchExpected = String(val).toLowerCase() === String(f.expected).toLowerCase();
         if (!ok) allOk = false;
-        subResults.push({ name: f.label, success: ok, message: ok ? `${f.key}=${val}${matchExpected ? " ✓" : ` (förväntat: ${f.expected})`}` : `Saknas` });
+        subResults.push({ name: `[required] ${f.label}`, success: ok, message: ok ? `${f.key}=${val}${matchExpected ? " ✓" : ` (förväntat: ${f.expected})`}` : `Saknas — required fält` });
       }
 
-      // Check optional return_date
-      if (args.return_date) {
-        subResults.push({ name: "Returdatum (optional)", success: true, message: `return_date=${args.return_date}` });
+      for (const f of optionalFields) {
+        const val = args[f.key];
+        const present = val !== undefined && val !== null;
+        subResults.push({ name: `[optional] ${f.label}`, success: true, message: present ? `${f.key}=${val}` : `Ej angiven (ok — optional)` });
       }
 
       const validEnum = ["economy", "premium_economy", "business", "first"].includes(args.cabin_class);
       if (!validEnum) allOk = false;
 
-      return { success: allOk && validEnum, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `${subResults.filter(s => s.success).length}/${fields.length} parametrar korrekta`, subResults };
+      const reqOk = subResults.filter(s => s.name.startsWith("[required]") && s.success).length;
+      return { success: allOk && validEnum, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `${reqOk}/${requiredFields.length} required ok, ${optionalFields.length} optional`, subResults };
     } catch {
       return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Failed to parse tool arguments" };
     }
@@ -525,45 +531,46 @@ export async function testToolUseComplexSchema(model: Model, apiKey: string, bas
       const subResults: import("../types/model").SubResult[] = [];
       let score = 0;
 
-      // Check customer
+      // Required fields
       const customerOk = !!(args.customer?.name && args.customer?.email);
       if (customerOk) score++;
-      subResults.push({ name: "Kundinformation", success: customerOk, message: customerOk ? `name=${args.customer.name}, email=${args.customer.email}` : "Saknar name eller email" });
+      subResults.push({ name: "[required] Kundinformation", success: customerOk, message: customerOk ? `name=${args.customer.name}, email=${args.customer.email}` : "Saknar name eller email — required" });
 
-      // Check items
       const itemsOk = Array.isArray(args.items) && args.items.length === 2;
       if (itemsOk) score++;
-      subResults.push({ name: "Artiklar (2 st)", success: itemsOk, message: `${Array.isArray(args.items) ? args.items.length : 0} artiklar`, response: args.items });
+      subResults.push({ name: "[required] Artiklar (2 st)", success: itemsOk, message: `${Array.isArray(args.items) ? args.items.length : 0} artiklar`, response: args.items });
 
-      // Check mouse quantity
       const mouse = args.items?.find((i: any) => i.product_name?.toLowerCase().includes("mouse"));
       const mouseOk = mouse?.quantity === 3;
       if (mouseOk) score++;
-      subResults.push({ name: "Wireless Mouse qty=3", success: mouseOk, message: mouse ? `quantity=${mouse.quantity}, unit_price=${mouse.unit_price}` : "Hittades ej" });
+      subResults.push({ name: "[required] Wireless Mouse qty=3", success: mouseOk, message: mouse ? `quantity=${mouse.quantity}, unit_price=${mouse.unit_price}` : "Hittades ej" });
 
-      // Check hub quantity
       const hub = args.items?.find((i: any) => i.product_name?.toLowerCase().includes("hub") || i.product_name?.toLowerCase().includes("usb"));
       const hubOk = hub?.quantity === 1;
       if (hubOk) score++;
-      subResults.push({ name: "USB-C Hub qty=1", success: hubOk, message: hub ? `quantity=${hub.quantity}, unit_price=${hub.unit_price}` : "Hittades ej" });
+      subResults.push({ name: "[required] USB-C Hub qty=1", success: hubOk, message: hub ? `quantity=${hub.quantity}, unit_price=${hub.unit_price}` : "Hittades ej" });
 
-      // Check shipping
       const shipOk = !!(args.shipping_address?.street && args.shipping_address?.city && args.shipping_address?.postal_code);
       if (shipOk) score++;
-      subResults.push({ name: "Leveransadress", success: shipOk, message: shipOk ? `${args.shipping_address.street}, ${args.shipping_address.postal_code} ${args.shipping_address.city}` : "Saknar fält", response: args.shipping_address });
+      subResults.push({ name: "[required] Leveransadress", success: shipOk, message: shipOk ? `${args.shipping_address.street}, ${args.shipping_address.postal_code} ${args.shipping_address.city}` : "Saknar fält — required", response: args.shipping_address });
 
-      // Check discount
+      // Optional fields
       const discountOk = args.discount?.type === "percentage" && args.discount?.value === 10;
       if (discountOk) score++;
-      subResults.push({ name: "Rabatt (10%)", success: discountOk, message: args.discount ? `type=${args.discount.type}, value=${args.discount.value}` : "Saknar rabatt" });
+      subResults.push({ name: "[optional] Rabatt (10%)", success: discountOk, message: args.discount ? `type=${args.discount.type}, value=${args.discount.value}` : "Ej angiven (optional men efterfrågad)" });
+
+      const hasNotes = !!args.notes;
+      subResults.push({ name: "[optional] Anteckningar", success: true, message: hasNotes ? `notes=${args.notes}` : "Ej angiven (ok — optional)" });
 
       const total = 6;
+      const reqCount = subResults.filter(s => s.name.startsWith("[required]") && s.success).length;
+      const reqTotal = subResults.filter(s => s.name.startsWith("[required]")).length;
       return {
         success: score >= 4,
         curlCommand,
         response: data,
         tokensPerSecond: calculateTPS(data, duration),
-        message: `Schema score: ${score}/${total}`,
+        message: `${reqCount}/${reqTotal} required ok, ${subResults.filter(s => s.name.startsWith("[optional]")).length} optional`,
         subResults,
       };
     } catch {
