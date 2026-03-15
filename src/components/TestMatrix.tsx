@@ -312,7 +312,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     const sortedModels = [...groupModels].sort((a, b) => a.id.localeCompare(b.id));
     const relevantFeatures = getFeaturesForGroupType(groupType);
 
-    for (const model of sortedModels) {
+    for (const model of sortedModels.filter(m => m.isUp !== false)) {
       for (const feature of relevantFeatures) {
         await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
