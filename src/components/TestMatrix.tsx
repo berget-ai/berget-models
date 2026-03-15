@@ -228,7 +228,8 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
         curlCommand: testDetail.curlCommand,
         response: testDetail.response,
         errorCode: testDetail.errorCode,
-        tokensPerSecond: testDetail.tokensPerSecond
+        tokensPerSecond: testDetail.tokensPerSecond,
+        subResults: testDetail.subResults
       })));
     } catch (error) {
       const duration = Date.now() - startTime;
