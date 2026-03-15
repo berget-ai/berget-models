@@ -523,7 +523,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                 
                 return (
                   <TableCell key={feature.id} className="text-center">
-                    {result && (result.status === 'success' || result.status === 'error') ? (
+                    {model.isUp === false ? (
+                      <span className="text-xs text-muted-foreground/50">—</span>
+                    ) : result && (result.status === 'success' || result.status === 'error') ? (
                       <Button
                         variant="ghost"
                         size="sm"
