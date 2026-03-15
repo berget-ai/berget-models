@@ -254,18 +254,34 @@ export async function testToolUseMultiParam(model: Model, apiKey: string, baseUr
     // Validate the arguments contain required fields
     try {
       const args = JSON.parse(toolCalls[0].function.arguments);
-      const requiredFields = ["origin", "destination", "date", "cabin_class", "passengers"];
-      const missingFields = requiredFields.filter(f => !(f in args));
+      const subResults: import("../types/model").SubResult[] = [];
+      
+      const fields = [
+        { key: "origin", label: "Avgångsort", expected: "Stockholm" },
+        { key: "destination", label: "Destination", expected: "Tokyo" },
+        { key: "date", label: "Datum", expected: "2025-06-15" },
+        { key: "cabin_class", label: "Klass (enum)", expected: "business" },
+        { key: "passengers", label: "Passagerare", expected: 2 },
+      ];
+
+      let allOk = true;
+      for (const f of fields) {
+        const val = args[f.key];
+        const ok = val !== undefined && val !== null;
+        const matchExpected = String(val).toLowerCase() === String(f.expected).toLowerCase();
+        if (!ok) allOk = false;
+        subResults.push({ name: f.label, success: ok, message: ok ? `${f.key}=${val}${matchExpected ? " ✓" : ` (förväntat: ${f.expected})`}` : `Saknas` });
+      }
+
+      // Check optional return_date
+      if (args.return_date) {
+        subResults.push({ name: "Returdatum (optional)", success: true, message: `return_date=${args.return_date}` });
+      }
+
       const validEnum = ["economy", "premium_economy", "business", "first"].includes(args.cabin_class);
+      if (!validEnum) allOk = false;
 
-      if (missingFields.length > 0) {
-        return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Missing required fields: ${missingFields.join(", ")}` };
-      }
-      if (!validEnum) {
-        return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Invalid cabin_class: ${args.cabin_class}` };
-      }
-
-      return { success: true, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Tool called with ${Object.keys(args).length} params, cabin: ${args.cabin_class}, passengers: ${args.passengers}` };
+      return { success: allOk && validEnum, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `${subResults.filter(s => s.success).length}/${fields.length} parametrar korrekta`, subResults };
     } catch {
       return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Failed to parse tool arguments" };
     }
@@ -368,9 +384,12 @@ export async function testToolUseMultiTool(model: Model, apiKey: string, baseUrl
 
     const calledFunction = toolCalls[0].function.name;
     const pickedCorrectTool = calledFunction === "convert_currency";
+    const subResults: import("../types/model").SubResult[] = [];
+
+    subResults.push({ name: "Rätt tool vald", success: pickedCorrectTool, message: pickedCorrectTool ? `convert_currency ✓` : `Valde ${calledFunction} istället för convert_currency` });
 
     if (!pickedCorrectTool) {
-      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Wrong tool selected: ${calledFunction} (expected convert_currency)` };
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Fel tool: ${calledFunction}`, subResults };
     }
 
     try {
@@ -379,15 +398,20 @@ export async function testToolUseMultiTool(model: Model, apiKey: string, baseUrl
       const correctFrom = args.from_currency?.toUpperCase() === "SEK";
       const correctTo = args.to_currency?.toUpperCase() === "EUR";
 
+      subResults.push({ name: "Belopp (500)", success: correctAmount, message: `amount=${args.amount}` });
+      subResults.push({ name: "Från-valuta (SEK)", success: correctFrom, message: `from_currency=${args.from_currency}` });
+      subResults.push({ name: "Till-valuta (EUR)", success: correctTo, message: `to_currency=${args.to_currency}` });
+
       return {
         success: true,
         curlCommand,
         response: data,
         tokensPerSecond: calculateTPS(data, duration),
-        message: `Correct tool! amount=${args.amount}${correctAmount ? "✓" : "✗"} from=${args.from_currency}${correctFrom ? "✓" : "✗"} to=${args.to_currency}${correctTo ? "✓" : "✗"}`,
+        message: `Rätt tool! ${subResults.filter(s => s.success).length}/${subResults.length} kontroller ok`,
+        subResults,
       };
     } catch {
-      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Correct tool but failed to parse arguments" };
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Rätt tool men kunde inte parsa argument", subResults };
     }
   } catch (error) {
     return { success: false, curlCommand, errorCode: "NETWORK_ERROR", message: error instanceof Error ? error.message : "Unknown error" };
@@ -498,34 +522,49 @@ export async function testToolUseComplexSchema(model: Model, apiKey: string, bas
 
     try {
       const args = JSON.parse(toolCalls[0].function.arguments);
-      const checks: string[] = [];
+      const subResults: import("../types/model").SubResult[] = [];
       let score = 0;
-      const total = 6;
 
       // Check customer
-      if (args.customer?.name && args.customer?.email) { score++; checks.push("customer✓"); } else { checks.push("customer✗"); }
+      const customerOk = !!(args.customer?.name && args.customer?.email);
+      if (customerOk) score++;
+      subResults.push({ name: "Kundinformation", success: customerOk, message: customerOk ? `name=${args.customer.name}, email=${args.customer.email}` : "Saknar name eller email" });
 
-      // Check items is array with 2 items
-      if (Array.isArray(args.items) && args.items.length === 2) { score++; checks.push("items(2)✓"); } else { checks.push(`items(${Array.isArray(args.items) ? args.items.length : 0})✗`); }
+      // Check items
+      const itemsOk = Array.isArray(args.items) && args.items.length === 2;
+      if (itemsOk) score++;
+      subResults.push({ name: "Artiklar (2 st)", success: itemsOk, message: `${Array.isArray(args.items) ? args.items.length : 0} artiklar`, response: args.items });
 
-      // Check item quantities
+      // Check mouse quantity
       const mouse = args.items?.find((i: any) => i.product_name?.toLowerCase().includes("mouse"));
-      const hub = args.items?.find((i: any) => i.product_name?.toLowerCase().includes("hub") || i.product_name?.toLowerCase().includes("usb"));
-      if (mouse?.quantity === 3) { score++; checks.push("qty-mouse✓"); } else { checks.push("qty-mouse✗"); }
-      if (hub?.quantity === 1) { score++; checks.push("qty-hub✓"); } else { checks.push("qty-hub✗"); }
+      const mouseOk = mouse?.quantity === 3;
+      if (mouseOk) score++;
+      subResults.push({ name: "Wireless Mouse qty=3", success: mouseOk, message: mouse ? `quantity=${mouse.quantity}, unit_price=${mouse.unit_price}` : "Hittades ej" });
 
-      // Check shipping address
-      if (args.shipping_address?.street && args.shipping_address?.city && args.shipping_address?.postal_code) { score++; checks.push("shipping✓"); } else { checks.push("shipping✗"); }
+      // Check hub quantity
+      const hub = args.items?.find((i: any) => i.product_name?.toLowerCase().includes("hub") || i.product_name?.toLowerCase().includes("usb"));
+      const hubOk = hub?.quantity === 1;
+      if (hubOk) score++;
+      subResults.push({ name: "USB-C Hub qty=1", success: hubOk, message: hub ? `quantity=${hub.quantity}, unit_price=${hub.unit_price}` : "Hittades ej" });
+
+      // Check shipping
+      const shipOk = !!(args.shipping_address?.street && args.shipping_address?.city && args.shipping_address?.postal_code);
+      if (shipOk) score++;
+      subResults.push({ name: "Leveransadress", success: shipOk, message: shipOk ? `${args.shipping_address.street}, ${args.shipping_address.postal_code} ${args.shipping_address.city}` : "Saknar fält", response: args.shipping_address });
 
       // Check discount
-      if (args.discount?.type === "percentage" && args.discount?.value === 10) { score++; checks.push("discount✓"); } else { checks.push("discount✗"); }
+      const discountOk = args.discount?.type === "percentage" && args.discount?.value === 10;
+      if (discountOk) score++;
+      subResults.push({ name: "Rabatt (10%)", success: discountOk, message: args.discount ? `type=${args.discount.type}, value=${args.discount.value}` : "Saknar rabatt" });
 
+      const total = 6;
       return {
         success: score >= 4,
         curlCommand,
         response: data,
         tokensPerSecond: calculateTPS(data, duration),
-        message: `Schema score: ${score}/${total} — ${checks.join(" ")}`,
+        message: `Schema score: ${score}/${total}`,
+        subResults,
       };
     } catch {
       return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Failed to parse tool arguments" };
@@ -624,12 +663,39 @@ export async function testToolUseParallel(model: Model, apiKey: string, baseUrl:
     const hasCurrency = calledTools.includes("convert_currency");
     const hasTranslate = calledTools.includes("translate_text");
 
+    const subResults: import("../types/model").SubResult[] = [];
+    
+    const weatherCall = toolCalls.find((tc: any) => tc.function.name === "get_weather");
+    subResults.push({
+      name: "get_weather",
+      success: hasWeather,
+      message: hasWeather ? `args: ${weatherCall?.function?.arguments}` : "Inte anropad",
+      response: weatherCall ? JSON.parse(weatherCall.function.arguments) : undefined,
+    });
+
+    const currencyCall = toolCalls.find((tc: any) => tc.function.name === "convert_currency");
+    subResults.push({
+      name: "convert_currency",
+      success: hasCurrency,
+      message: hasCurrency ? `args: ${currencyCall?.function?.arguments}` : "Inte anropad",
+      response: hasCurrency ? JSON.parse(currencyCall.function.arguments) : undefined,
+    });
+
+    const translateCall = toolCalls.find((tc: any) => tc.function.name === "translate_text");
+    subResults.push({
+      name: "translate_text",
+      success: hasTranslate,
+      message: hasTranslate ? `args: ${translateCall?.function?.arguments}` : "Inte anropad",
+      response: hasTranslate ? JSON.parse(translateCall.function.arguments) : undefined,
+    });
+
     return {
       success: uniqueTools.size >= 3,
       curlCommand,
       response: data,
       tokensPerSecond: calculateTPS(data, duration),
-      message: `${uniqueTools.size}/3 parallel calls: weather${hasWeather ? "✓" : "✗"} currency${hasCurrency ? "✓" : "✗"} translate${hasTranslate ? "✓" : "✗"}`,
+      message: `${uniqueTools.size}/3 parallella anrop`,
+      subResults,
     };
   } catch (error) {
     return { success: false, curlCommand, errorCode: "NETWORK_ERROR", message: error instanceof Error ? error.message : "Unknown error" };

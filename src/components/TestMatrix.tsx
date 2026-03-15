@@ -24,7 +24,7 @@ import {
   Info,
   Copy
 } from 'lucide-react';
-import { Model, TestResult, TestFeature, TestDetail } from '../types/model';
+import { Model, TestResult, TestFeature, TestDetail, SubResult } from '../types/model';
 import { 
   fetchModels, 
   testToolUse,
@@ -228,7 +228,8 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
         curlCommand: testDetail.curlCommand,
         response: testDetail.response,
         errorCode: testDetail.errorCode,
-        tokensPerSecond: testDetail.tokensPerSecond
+        tokensPerSecond: testDetail.tokensPerSecond,
+        subResults: testDetail.subResults
       })));
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -970,6 +971,73 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                   <pre className="p-3 rounded-lg bg-muted/50 text-xs overflow-x-auto max-h-[300px] overflow-y-auto">
                     {JSON.stringify(selectedResult.response, null, 2)}
                   </pre>
+                </div>
+              )}
+
+              {/* Sub Results */}
+              {selectedResult.subResults && selectedResult.subResults.length > 0 && (
+                <div>
+                  <div className="text-sm font-medium mb-2">
+                    Anrop ({selectedResult.subResults.filter(s => s.success).length}/{selectedResult.subResults.length} lyckades)
+                  </div>
+                  <Accordion type="multiple" className="w-full">
+                    {selectedResult.subResults.map((sub, idx) => (
+                      <AccordionItem key={idx} value={`sub-${idx}`} className="border-border/30">
+                        <AccordionTrigger className="py-2 text-sm hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            {sub.success ? (
+                              <Check className="h-4 w-4 text-success shrink-0" />
+                            ) : (
+                              <X className="h-4 w-4 text-destructive shrink-0" />
+                            )}
+                            <span className="font-medium">{sub.name}</span>
+                            {sub.duration && (
+                              <span className="text-xs text-muted-foreground ml-auto mr-2">{sub.duration}ms</span>
+                            )}
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-3 pt-1">
+                          {sub.message && (
+                            <div className="p-2 rounded bg-muted/50 text-xs">{sub.message}</div>
+                          )}
+                          {sub.tokensPerSecond && (
+                            <div className="text-xs text-muted-foreground">TPS: {sub.tokensPerSecond}</div>
+                          )}
+                          {sub.errorCode && (
+                            <div className="text-xs text-destructive">Felkod: {sub.errorCode}</div>
+                          )}
+                          {sub.curlCommand && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium">cURL</span>
+                                <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => copyToClipboard(sub.curlCommand || '')}>
+                                  <Copy className="h-3 w-3 mr-1" />
+                                  <span className="text-xs">Kopiera</span>
+                                </Button>
+                              </div>
+                              <pre className="p-2 rounded bg-muted/50 text-[10px] overflow-x-auto whitespace-pre-wrap break-all max-h-[150px] overflow-y-auto">
+                                {sub.curlCommand}
+                              </pre>
+                            </div>
+                          )}
+                          {sub.response && (
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium">Svar</span>
+                                <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => copyToClipboard(JSON.stringify(sub.response, null, 2))}>
+                                  <Copy className="h-3 w-3 mr-1" />
+                                  <span className="text-xs">Kopiera</span>
+                                </Button>
+                              </div>
+                              <pre className="p-2 rounded bg-muted/50 text-[10px] overflow-x-auto max-h-[200px] overflow-y-auto">
+                                {JSON.stringify(sub.response, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
                 </div>
               )}
 

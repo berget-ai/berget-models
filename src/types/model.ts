@@ -7,6 +7,17 @@ export interface Model {
   isUp?: boolean;
 }
 
+export interface SubResult {
+  name: string;
+  success: boolean;
+  message?: string;
+  curlCommand?: string;
+  response?: any;
+  errorCode?: string;
+  duration?: number;
+  tokensPerSecond?: number;
+}
+
 export interface TestResult {
   modelId: string;
   feature: string;
@@ -17,6 +28,7 @@ export interface TestResult {
   response?: any;
   errorCode?: string;
   tokensPerSecond?: number;
+  subResults?: SubResult[];
 }
 
 export interface TestDetail {
@@ -26,6 +38,7 @@ export interface TestDetail {
   errorCode?: string;
   message?: string;
   tokensPerSecond?: number;
+  subResults?: SubResult[];
 }
 
 export interface TestFeature {
