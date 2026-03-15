@@ -24,7 +24,7 @@ import {
   Info,
   Copy
 } from 'lucide-react';
-import { Model, TestResult, TestFeature, TestDetail } from '../types/model';
+import { Model, TestResult, TestFeature, TestDetail, SubResult } from '../types/model';
 import { 
   fetchModels, 
   testToolUse,
