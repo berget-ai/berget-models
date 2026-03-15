@@ -498,34 +498,49 @@ export async function testToolUseComplexSchema(model: Model, apiKey: string, bas
 
     try {
       const args = JSON.parse(toolCalls[0].function.arguments);
-      const checks: string[] = [];
+      const subResults: import("../types/model").SubResult[] = [];
       let score = 0;
-      const total = 6;
 
       // Check customer
-      if (args.customer?.name && args.customer?.email) { score++; checks.push("customer✓"); } else { checks.push("customer✗"); }
+      const customerOk = !!(args.customer?.name && args.customer?.email);
+      if (customerOk) score++;
+      subResults.push({ name: "Kundinformation", success: customerOk, message: customerOk ? `name=${args.customer.name}, email=${args.customer.email}` : "Saknar name eller email" });
 
-      // Check items is array with 2 items
-      if (Array.isArray(args.items) && args.items.length === 2) { score++; checks.push("items(2)✓"); } else { checks.push(`items(${Array.isArray(args.items) ? args.items.length : 0})✗`); }
+      // Check items
+      const itemsOk = Array.isArray(args.items) && args.items.length === 2;
+      if (itemsOk) score++;
+      subResults.push({ name: "Artiklar (2 st)", success: itemsOk, message: `${Array.isArray(args.items) ? args.items.length : 0} artiklar`, response: args.items });
 
-      // Check item quantities
+      // Check mouse quantity
       const mouse = args.items?.find((i: any) => i.product_name?.toLowerCase().includes("mouse"));
-      const hub = args.items?.find((i: any) => i.product_name?.toLowerCase().includes("hub") || i.product_name?.toLowerCase().includes("usb"));
-      if (mouse?.quantity === 3) { score++; checks.push("qty-mouse✓"); } else { checks.push("qty-mouse✗"); }
-      if (hub?.quantity === 1) { score++; checks.push("qty-hub✓"); } else { checks.push("qty-hub✗"); }
+      const mouseOk = mouse?.quantity === 3;
+      if (mouseOk) score++;
+      subResults.push({ name: "Wireless Mouse qty=3", success: mouseOk, message: mouse ? `quantity=${mouse.quantity}, unit_price=${mouse.unit_price}` : "Hittades ej" });
 
-      // Check shipping address
-      if (args.shipping_address?.street && args.shipping_address?.city && args.shipping_address?.postal_code) { score++; checks.push("shipping✓"); } else { checks.push("shipping✗"); }
+      // Check hub quantity
+      const hub = args.items?.find((i: any) => i.product_name?.toLowerCase().includes("hub") || i.product_name?.toLowerCase().includes("usb"));
+      const hubOk = hub?.quantity === 1;
+      if (hubOk) score++;
+      subResults.push({ name: "USB-C Hub qty=1", success: hubOk, message: hub ? `quantity=${hub.quantity}, unit_price=${hub.unit_price}` : "Hittades ej" });
+
+      // Check shipping
+      const shipOk = !!(args.shipping_address?.street && args.shipping_address?.city && args.shipping_address?.postal_code);
+      if (shipOk) score++;
+      subResults.push({ name: "Leveransadress", success: shipOk, message: shipOk ? `${args.shipping_address.street}, ${args.shipping_address.postal_code} ${args.shipping_address.city}` : "Saknar fält", response: args.shipping_address });
 
       // Check discount
-      if (args.discount?.type === "percentage" && args.discount?.value === 10) { score++; checks.push("discount✓"); } else { checks.push("discount✗"); }
+      const discountOk = args.discount?.type === "percentage" && args.discount?.value === 10;
+      if (discountOk) score++;
+      subResults.push({ name: "Rabatt (10%)", success: discountOk, message: args.discount ? `type=${args.discount.type}, value=${args.discount.value}` : "Saknar rabatt" });
 
+      const total = 6;
       return {
         success: score >= 4,
         curlCommand,
         response: data,
         tokensPerSecond: calculateTPS(data, duration),
-        message: `Schema score: ${score}/${total} — ${checks.join(" ")}`,
+        message: `Schema score: ${score}/${total}`,
+        subResults,
       };
     } catch {
       return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Failed to parse tool arguments" };
