@@ -179,6 +179,462 @@ export async function testToolUse(model: Model, apiKey: string, baseUrl: string)
   }
 }
 
+// Advanced Tool Use Level 2: Multiple parameters with enums and optional fields
+export async function testToolUseMultiParam(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const userPrompt = formatPrompt(
+    "Book a flight from Stockholm to Tokyo on 2025-06-15 in business class for 2 passengers. Use the book_flight tool.",
+    model.id,
+  );
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: "system",
+        content: "You are a travel assistant. You MUST use the provided tools. Do not respond with text - always call the appropriate tool.",
+      },
+      { role: "user", content: userPrompt },
+    ],
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "book_flight",
+          description: "Book a flight between two cities",
+          parameters: {
+            type: "object",
+            properties: {
+              origin: { type: "string", description: "Departure city" },
+              destination: { type: "string", description: "Arrival city" },
+              date: { type: "string", description: "Travel date in YYYY-MM-DD format" },
+              cabin_class: {
+                type: "string",
+                enum: ["economy", "premium_economy", "business", "first"],
+                description: "Cabin class",
+              },
+              passengers: { type: "integer", description: "Number of passengers", minimum: 1, maximum: 9 },
+              return_date: { type: "string", description: "Optional return date in YYYY-MM-DD format" },
+            },
+            required: ["origin", "destination", "date", "cabin_class", "passengers"],
+          },
+        },
+      },
+    ],
+    tool_choice: "auto",
+    max_tokens: 4000,
+  };
+
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
+  const startTime = Date.now();
+
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    });
+    const data = await response.json();
+    const duration = Date.now() - startTime;
+
+    if (!response.ok) {
+      return { success: false, curlCommand, response: data, errorCode: response.status.toString(), message: "API request failed" };
+    }
+
+    const toolCalls = data.choices?.[0]?.message?.tool_calls;
+    const hasToolCalls = toolCalls?.length > 0;
+
+    if (!hasToolCalls) {
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Model did not use tools" };
+    }
+
+    // Validate the arguments contain required fields
+    try {
+      const args = JSON.parse(toolCalls[0].function.arguments);
+      const requiredFields = ["origin", "destination", "date", "cabin_class", "passengers"];
+      const missingFields = requiredFields.filter(f => !(f in args));
+      const validEnum = ["economy", "premium_economy", "business", "first"].includes(args.cabin_class);
+
+      if (missingFields.length > 0) {
+        return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Missing required fields: ${missingFields.join(", ")}` };
+      }
+      if (!validEnum) {
+        return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Invalid cabin_class: ${args.cabin_class}` };
+      }
+
+      return { success: true, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Tool called with ${Object.keys(args).length} params, cabin: ${args.cabin_class}, passengers: ${args.passengers}` };
+    } catch {
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Failed to parse tool arguments" };
+    }
+  } catch (error) {
+    return { success: false, curlCommand, errorCode: "NETWORK_ERROR", message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+// Advanced Tool Use Level 3: Multiple tools - model must pick the right one
+export async function testToolUseMultiTool(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const userPrompt = formatPrompt(
+    "I need to convert 500 SEK to EUR. Use the appropriate tool.",
+    model.id,
+  );
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: "system",
+        content: "You are a helpful assistant. You MUST use the provided tools. Pick the most appropriate tool for the task.",
+      },
+      { role: "user", content: userPrompt },
+    ],
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "get_weather",
+          description: "Get current weather for a location",
+          parameters: {
+            type: "object",
+            properties: { location: { type: "string" } },
+            required: ["location"],
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: "convert_currency",
+          description: "Convert an amount from one currency to another",
+          parameters: {
+            type: "object",
+            properties: {
+              amount: { type: "number", description: "Amount to convert" },
+              from_currency: { type: "string", description: "ISO 4217 currency code to convert from" },
+              to_currency: { type: "string", description: "ISO 4217 currency code to convert to" },
+            },
+            required: ["amount", "from_currency", "to_currency"],
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: "translate_text",
+          description: "Translate text from one language to another",
+          parameters: {
+            type: "object",
+            properties: {
+              text: { type: "string" },
+              source_language: { type: "string" },
+              target_language: { type: "string" },
+            },
+            required: ["text", "source_language", "target_language"],
+          },
+        },
+      },
+    ],
+    tool_choice: "auto",
+    max_tokens: 4000,
+  };
+
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
+  const startTime = Date.now();
+
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    });
+    const data = await response.json();
+    const duration = Date.now() - startTime;
+
+    if (!response.ok) {
+      return { success: false, curlCommand, response: data, errorCode: response.status.toString(), message: "API request failed" };
+    }
+
+    const toolCalls = data.choices?.[0]?.message?.tool_calls;
+    const hasToolCalls = toolCalls?.length > 0;
+
+    if (!hasToolCalls) {
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Model did not use tools" };
+    }
+
+    const calledFunction = toolCalls[0].function.name;
+    const pickedCorrectTool = calledFunction === "convert_currency";
+
+    if (!pickedCorrectTool) {
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Wrong tool selected: ${calledFunction} (expected convert_currency)` };
+    }
+
+    try {
+      const args = JSON.parse(toolCalls[0].function.arguments);
+      const correctAmount = args.amount === 500;
+      const correctFrom = args.from_currency?.toUpperCase() === "SEK";
+      const correctTo = args.to_currency?.toUpperCase() === "EUR";
+
+      return {
+        success: true,
+        curlCommand,
+        response: data,
+        tokensPerSecond: calculateTPS(data, duration),
+        message: `Correct tool! amount=${args.amount}${correctAmount ? "✓" : "✗"} from=${args.from_currency}${correctFrom ? "✓" : "✗"} to=${args.to_currency}${correctTo ? "✓" : "✗"}`,
+      };
+    } catch {
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Correct tool but failed to parse arguments" };
+    }
+  } catch (error) {
+    return { success: false, curlCommand, errorCode: "NETWORK_ERROR", message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+// Advanced Tool Use Level 4: Complex nested schema with arrays and objects
+export async function testToolUseComplexSchema(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const userPrompt = formatPrompt(
+    "Create an order for customer 'Anna Svensson' (email: anna@example.com) with 2 items: 3x 'Wireless Mouse' at 299 SEK each, and 1x 'USB-C Hub' at 599 SEK. Apply a 10% discount. Shipping to Kungsgatan 1, Stockholm, 11143, Sweden. Use the create_order tool.",
+    model.id,
+  );
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: "system",
+        content: "You are an order management assistant. You MUST use the provided tools. Fill in all required fields accurately based on the user's request.",
+      },
+      { role: "user", content: userPrompt },
+    ],
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "create_order",
+          description: "Create a new order with customer info, items, and shipping details",
+          parameters: {
+            type: "object",
+            properties: {
+              customer: {
+                type: "object",
+                description: "Customer information",
+                properties: {
+                  name: { type: "string" },
+                  email: { type: "string", format: "email" },
+                },
+                required: ["name", "email"],
+              },
+              items: {
+                type: "array",
+                description: "List of order items",
+                items: {
+                  type: "object",
+                  properties: {
+                    product_name: { type: "string" },
+                    quantity: { type: "integer", minimum: 1 },
+                    unit_price: { type: "number", description: "Price per unit in SEK" },
+                  },
+                  required: ["product_name", "quantity", "unit_price"],
+                },
+                minItems: 1,
+              },
+              shipping_address: {
+                type: "object",
+                properties: {
+                  street: { type: "string" },
+                  city: { type: "string" },
+                  postal_code: { type: "string" },
+                  country: { type: "string" },
+                },
+                required: ["street", "city", "postal_code", "country"],
+              },
+              discount: {
+                type: "object",
+                description: "Optional discount",
+                properties: {
+                  type: { type: "string", enum: ["percentage", "fixed_amount"] },
+                  value: { type: "number" },
+                },
+                required: ["type", "value"],
+              },
+              notes: { type: "string", description: "Optional order notes" },
+            },
+            required: ["customer", "items", "shipping_address"],
+          },
+        },
+      },
+    ],
+    tool_choice: "auto",
+    max_tokens: 4000,
+  };
+
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
+  const startTime = Date.now();
+
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    });
+    const data = await response.json();
+    const duration = Date.now() - startTime;
+
+    if (!response.ok) {
+      return { success: false, curlCommand, response: data, errorCode: response.status.toString(), message: "API request failed" };
+    }
+
+    const toolCalls = data.choices?.[0]?.message?.tool_calls;
+    if (!toolCalls?.length) {
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Model did not use tools" };
+    }
+
+    try {
+      const args = JSON.parse(toolCalls[0].function.arguments);
+      const checks: string[] = [];
+      let score = 0;
+      const total = 6;
+
+      // Check customer
+      if (args.customer?.name && args.customer?.email) { score++; checks.push("customer✓"); } else { checks.push("customer✗"); }
+
+      // Check items is array with 2 items
+      if (Array.isArray(args.items) && args.items.length === 2) { score++; checks.push("items(2)✓"); } else { checks.push(`items(${Array.isArray(args.items) ? args.items.length : 0})✗`); }
+
+      // Check item quantities
+      const mouse = args.items?.find((i: any) => i.product_name?.toLowerCase().includes("mouse"));
+      const hub = args.items?.find((i: any) => i.product_name?.toLowerCase().includes("hub") || i.product_name?.toLowerCase().includes("usb"));
+      if (mouse?.quantity === 3) { score++; checks.push("qty-mouse✓"); } else { checks.push("qty-mouse✗"); }
+      if (hub?.quantity === 1) { score++; checks.push("qty-hub✓"); } else { checks.push("qty-hub✗"); }
+
+      // Check shipping address
+      if (args.shipping_address?.street && args.shipping_address?.city && args.shipping_address?.postal_code) { score++; checks.push("shipping✓"); } else { checks.push("shipping✗"); }
+
+      // Check discount
+      if (args.discount?.type === "percentage" && args.discount?.value === 10) { score++; checks.push("discount✓"); } else { checks.push("discount✗"); }
+
+      return {
+        success: score >= 4,
+        curlCommand,
+        response: data,
+        tokensPerSecond: calculateTPS(data, duration),
+        message: `Schema score: ${score}/${total} — ${checks.join(" ")}`,
+      };
+    } catch {
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Failed to parse tool arguments" };
+    }
+  } catch (error) {
+    return { success: false, curlCommand, errorCode: "NETWORK_ERROR", message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+// Advanced Tool Use Level 5: Parallel tool calls - model should call multiple tools
+export async function testToolUseParallel(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const userPrompt = formatPrompt(
+    "I need three things at once: 1) What's the weather in Stockholm? 2) Convert 1000 SEK to USD. 3) Translate 'Hello, how are you?' to Swedish. Use ALL three tools in a single response.",
+    model.id,
+  );
+  const requestBody = {
+    model: model.id,
+    messages: [
+      {
+        role: "system",
+        content: "You are a helpful assistant. You MUST call ALL relevant tools in a single response. Call multiple tools simultaneously when the user asks for multiple things.",
+      },
+      { role: "user", content: userPrompt },
+    ],
+    tools: [
+      {
+        type: "function",
+        function: {
+          name: "get_weather",
+          description: "Get current weather for a location",
+          parameters: { type: "object", properties: { location: { type: "string" } }, required: ["location"] },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: "convert_currency",
+          description: "Convert currency",
+          parameters: {
+            type: "object",
+            properties: {
+              amount: { type: "number" },
+              from_currency: { type: "string" },
+              to_currency: { type: "string" },
+            },
+            required: ["amount", "from_currency", "to_currency"],
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
+          name: "translate_text",
+          description: "Translate text between languages",
+          parameters: {
+            type: "object",
+            properties: {
+              text: { type: "string" },
+              source_language: { type: "string" },
+              target_language: { type: "string" },
+            },
+            required: ["text", "source_language", "target_language"],
+          },
+        },
+      },
+    ],
+    tool_choice: "auto",
+    max_tokens: 4000,
+  };
+
+  const curlCommand = `curl -X POST "${baseUrl}/chat/completions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody, null, 2)}'`;
+
+  const startTime = Date.now();
+
+  try {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody),
+    });
+    const data = await response.json();
+    const duration = Date.now() - startTime;
+
+    if (!response.ok) {
+      return { success: false, curlCommand, response: data, errorCode: response.status.toString(), message: "API request failed" };
+    }
+
+    const toolCalls = data.choices?.[0]?.message?.tool_calls || [];
+    const calledTools = toolCalls.map((tc: any) => tc.function.name);
+    const uniqueTools = new Set(calledTools);
+
+    const hasWeather = calledTools.includes("get_weather");
+    const hasCurrency = calledTools.includes("convert_currency");
+    const hasTranslate = calledTools.includes("translate_text");
+
+    return {
+      success: uniqueTools.size >= 3,
+      curlCommand,
+      response: data,
+      tokensPerSecond: calculateTPS(data, duration),
+      message: `${uniqueTools.size}/3 parallel calls: weather${hasWeather ? "✓" : "✗"} currency${hasCurrency ? "✓" : "✗"} translate${hasTranslate ? "✓" : "✗"}`,
+    };
+  } catch (error) {
+    return { success: false, curlCommand, errorCode: "NETWORK_ERROR", message: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
 export async function testJsonSupport(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const userPrompt = formatPrompt(
     'Please return a valid JSON object with exactly one field called "test" that has the boolean value true. Your response should be only the JSON object, nothing else.',
