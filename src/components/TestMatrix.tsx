@@ -64,8 +64,36 @@ const TEST_FEATURES: TestFeature[] = [
   {
     id: 'tools',
     name: 'Tool Use',
-    description: 'Function calling/tools support',
+    description: 'Grundläggande function calling (1 tool, 1 param)',
     testFunction: testToolUse,
+    supportedTypes: ['chat']
+  },
+  {
+    id: 'tools_multi_param',
+    name: 'Tools: Multi-Param',
+    description: 'Tool med flera params, enums och optional fields',
+    testFunction: testToolUseMultiParam,
+    supportedTypes: ['chat']
+  },
+  {
+    id: 'tools_multi_tool',
+    name: 'Tools: Rätt val',
+    description: 'Välja rätt tool bland 3 alternativ',
+    testFunction: testToolUseMultiTool,
+    supportedTypes: ['chat']
+  },
+  {
+    id: 'tools_complex',
+    name: 'Tools: Komplex',
+    description: 'Nested objects, arrays och komplex schema',
+    testFunction: testToolUseComplexSchema,
+    supportedTypes: ['chat']
+  },
+  {
+    id: 'tools_parallel',
+    name: 'Tools: Parallel',
+    description: 'Anropa 3 tools samtidigt i ett svar',
+    testFunction: testToolUseParallel,
     supportedTypes: ['chat']
   },
   {
