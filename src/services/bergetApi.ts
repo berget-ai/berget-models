@@ -254,18 +254,34 @@ export async function testToolUseMultiParam(model: Model, apiKey: string, baseUr
     // Validate the arguments contain required fields
     try {
       const args = JSON.parse(toolCalls[0].function.arguments);
-      const requiredFields = ["origin", "destination", "date", "cabin_class", "passengers"];
-      const missingFields = requiredFields.filter(f => !(f in args));
+      const subResults: import("../types/model").SubResult[] = [];
+      
+      const fields = [
+        { key: "origin", label: "Avgångsort", expected: "Stockholm" },
+        { key: "destination", label: "Destination", expected: "Tokyo" },
+        { key: "date", label: "Datum", expected: "2025-06-15" },
+        { key: "cabin_class", label: "Klass (enum)", expected: "business" },
+        { key: "passengers", label: "Passagerare", expected: 2 },
+      ];
+
+      let allOk = true;
+      for (const f of fields) {
+        const val = args[f.key];
+        const ok = val !== undefined && val !== null;
+        const matchExpected = String(val).toLowerCase() === String(f.expected).toLowerCase();
+        if (!ok) allOk = false;
+        subResults.push({ name: f.label, success: ok, message: ok ? `${f.key}=${val}${matchExpected ? " ✓" : ` (förväntat: ${f.expected})`}` : `Saknas` });
+      }
+
+      // Check optional return_date
+      if (args.return_date) {
+        subResults.push({ name: "Returdatum (optional)", success: true, message: `return_date=${args.return_date}` });
+      }
+
       const validEnum = ["economy", "premium_economy", "business", "first"].includes(args.cabin_class);
+      if (!validEnum) allOk = false;
 
-      if (missingFields.length > 0) {
-        return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Missing required fields: ${missingFields.join(", ")}` };
-      }
-      if (!validEnum) {
-        return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Invalid cabin_class: ${args.cabin_class}` };
-      }
-
-      return { success: true, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Tool called with ${Object.keys(args).length} params, cabin: ${args.cabin_class}, passengers: ${args.passengers}` };
+      return { success: allOk && validEnum, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `${subResults.filter(s => s.success).length}/${fields.length} parametrar korrekta`, subResults };
     } catch {
       return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Failed to parse tool arguments" };
     }
