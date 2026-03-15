@@ -384,9 +384,12 @@ export async function testToolUseMultiTool(model: Model, apiKey: string, baseUrl
 
     const calledFunction = toolCalls[0].function.name;
     const pickedCorrectTool = calledFunction === "convert_currency";
+    const subResults: import("../types/model").SubResult[] = [];
+
+    subResults.push({ name: "Rätt tool vald", success: pickedCorrectTool, message: pickedCorrectTool ? `convert_currency ✓` : `Valde ${calledFunction} istället för convert_currency` });
 
     if (!pickedCorrectTool) {
-      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Wrong tool selected: ${calledFunction} (expected convert_currency)` };
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: `Fel tool: ${calledFunction}`, subResults };
     }
 
     try {
@@ -395,15 +398,20 @@ export async function testToolUseMultiTool(model: Model, apiKey: string, baseUrl
       const correctFrom = args.from_currency?.toUpperCase() === "SEK";
       const correctTo = args.to_currency?.toUpperCase() === "EUR";
 
+      subResults.push({ name: "Belopp (500)", success: correctAmount, message: `amount=${args.amount}` });
+      subResults.push({ name: "Från-valuta (SEK)", success: correctFrom, message: `from_currency=${args.from_currency}` });
+      subResults.push({ name: "Till-valuta (EUR)", success: correctTo, message: `to_currency=${args.to_currency}` });
+
       return {
         success: true,
         curlCommand,
         response: data,
         tokensPerSecond: calculateTPS(data, duration),
-        message: `Correct tool! amount=${args.amount}${correctAmount ? "✓" : "✗"} from=${args.from_currency}${correctFrom ? "✓" : "✗"} to=${args.to_currency}${correctTo ? "✓" : "✗"}`,
+        message: `Rätt tool! ${subResults.filter(s => s.success).length}/${subResults.length} kontroller ok`,
+        subResults,
       };
     } catch {
-      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Correct tool but failed to parse arguments" };
+      return { success: false, curlCommand, response: data, tokensPerSecond: calculateTPS(data, duration), message: "Rätt tool men kunde inte parsa argument", subResults };
     }
   } catch (error) {
     return { success: false, curlCommand, errorCode: "NETWORK_ERROR", message: error instanceof Error ? error.message : "Unknown error" };
