@@ -1,6 +1,7 @@
 import { Model, TestDetail } from "../types/model";
 import { encodeImageToBase64 } from "../utils/imageEncoder";
 import testImage from "../assets/test-image.jpg";
+import testAudioUrl from "../assets/test-audio.wav";
 import { LONG_TRANSCRIPTION } from "../data/longTranscription";
 
 function calculateTPS(response: any, durationMs: number): number | undefined {
@@ -1442,11 +1443,10 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
   -F "model=${model.id}"`;
 
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const buffer = audioContext.createBuffer(1, audioContext.sampleRate, audioContext.sampleRate);
+    const audioResponse = await fetch(testAudioUrl);
+    const audioBlob = await audioResponse.blob();
 
     const formData = new FormData();
-    const audioBlob = new Blob([buffer], { type: "audio/wav" });
     formData.append("file", audioBlob, "test.wav");
     formData.append("model", model.id);
 
