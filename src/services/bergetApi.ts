@@ -1442,11 +1442,30 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
   -F "model=${model.id}"`;
 
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const buffer = audioContext.createBuffer(1, audioContext.sampleRate, audioContext.sampleRate);
+    // Generate a valid WAV file with 1 second of silence
+    const sampleRate = 16000;
+    const numSamples = sampleRate;
+    const wavHeader = new ArrayBuffer(44 + numSamples * 2);
+    const view = new DataView(wavHeader);
+    const writeString = (offset: number, str: string) => {
+      for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+    };
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + numSamples * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, numSamples * 2, true);
 
     const formData = new FormData();
-    const audioBlob = new Blob([buffer], { type: "audio/wav" });
+    const audioBlob = new Blob([wavHeader], { type: "audio/wav" });
     formData.append("file", audioBlob, "test.wav");
     formData.append("model", model.id);
 
