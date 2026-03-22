@@ -1438,16 +1438,16 @@ export async function testReranking(model: Model, apiKey: string, baseUrl: strin
 export async function testSpeechToText(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const curlCommand = `curl -X POST "${baseUrl}/audio/transcriptions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
-  -F "file=@test.wav" \\
+  -F "file=@test-audio.m4a" \\
   -F "model=${model.id}"`;
 
   try {
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const buffer = audioContext.createBuffer(1, audioContext.sampleRate, audioContext.sampleRate);
+    // Fetch a real audio file instead of generating silence
+    const audioResponse = await fetch("/test-audio.m4a");
+    const audioBlob = await audioResponse.blob();
 
     const formData = new FormData();
-    const audioBlob = new Blob([buffer], { type: "audio/wav" });
-    formData.append("file", audioBlob, "test.wav");
+    formData.append("file", new File([audioBlob], "test-audio.m4a", { type: "audio/m4a" }), "test-audio.m4a");
     formData.append("model", model.id);
 
     const response = await fetch(`${baseUrl}/audio/transcriptions`, {
@@ -1459,14 +1459,14 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
     });
 
     const data = await response.json();
-    const success = response.ok && typeof data.text === "string";
+    const success = response.ok && typeof data.text === "string" && data.text.trim().length > 0;
 
     return {
       success,
       curlCommand,
       response: data,
       errorCode: response.ok ? undefined : response.status.toString(),
-      message: success ? "Speech-to-text test successful" : "Invalid transcription response",
+      message: success ? `Speech-to-text: "${data.text.substring(0, 100)}..."` : "Invalid transcription response",
     };
   } catch (error) {
     return {
