@@ -1436,44 +1436,180 @@ export async function testReranking(model: Model, apiKey: string, baseUrl: strin
 }
 
 export async function testSpeechToText(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
-  const curlCommand = `curl -X POST "${baseUrl}/audio/transcriptions" \\
+  const modelId = model.id.toLowerCase();
+  const isNorwegian = modelId.includes("nb-whisper") || modelId.includes("nb_whisper");
+  const isSwedish = !isNorwegian && !modelId.includes("whisper-large");
+  
+  // Pick audio file and language based on model
+  let audioFile: string;
+  let audioFileName: string;
+  let language: string;
+  let mimeType: string;
+  
+  if (isNorwegian) {
+    audioFile = "/test-audio-no.mp3";
+    audioFileName = "test-audio-no.mp3";
+    language = "no";
+    mimeType = "audio/mpeg";
+  } else if (modelId.includes("whisper-large")) {
+    audioFile = "/test-audio-en.mp3";
+    audioFileName = "test-audio-en.mp3";
+    language = "en";
+    mimeType = "audio/mpeg";
+  } else {
+    // Default: Swedish audio
+    audioFile = "/test-audio.m4a";
+    audioFileName = "test-audio.m4a";
+    language = "sv";
+    mimeType = "audio/m4a";
+  }
+
+  const subResults: SubResult[] = [];
+  let overallSuccess = true;
+
+  // --- Sub-test 1: Basic transcription ---
+  const basicCurl = `curl -X POST "${baseUrl}/audio/transcriptions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
-  -F "file=@test-audio.m4a" \\
-  -F "model=${model.id}"`;
+  -F "file=@${audioFileName}" \\
+  -F "model=${model.id}" \\
+  -F "language=${language}"`;
 
   try {
-    // Fetch a real audio file instead of generating silence
-    const audioResponse = await fetch("/test-audio.m4a");
+    const audioResponse = await fetch(audioFile);
     const audioBlob = await audioResponse.blob();
 
     const formData = new FormData();
-    formData.append("file", new File([audioBlob], "test-audio.m4a", { type: "audio/m4a" }), "test-audio.m4a");
+    formData.append("file", new File([audioBlob], audioFileName, { type: mimeType }), audioFileName);
     formData.append("model", model.id);
+    formData.append("language", language);
 
+    const startBasic = Date.now();
     const response = await fetch(`${baseUrl}/audio/transcriptions`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers: { Authorization: `Bearer ${apiKey}` },
       body: formData,
     });
-
+    const basicDuration = Date.now() - startBasic;
     const data = await response.json();
-    const success = response.ok && typeof data.text === "string" && data.text.trim().length > 0;
+    const basicSuccess = response.ok && typeof data.text === "string" && data.text.trim().length > 0;
+
+    subResults.push({
+      name: "Grundläggande transkription",
+      success: basicSuccess,
+      message: basicSuccess ? `"${data.text.substring(0, 80)}..."` : (data.error?.message || "Tom eller ogiltig respons"),
+      curlCommand: basicCurl,
+      response: data,
+      duration: basicDuration,
+    });
+    if (!basicSuccess) overallSuccess = false;
+
+    // --- Sub-test 2: Timestamps ---
+    const tsFormData = new FormData();
+    tsFormData.append("file", new File([audioBlob], audioFileName, { type: mimeType }), audioFileName);
+    tsFormData.append("model", model.id);
+    tsFormData.append("language", language);
+    tsFormData.append("response_format", "verbose_json");
+    tsFormData.append("timestamp_granularities[]", "word");
+    tsFormData.append("timestamp_granularities[]", "segment");
+
+    const tsCurl = `curl -X POST "${baseUrl}/audio/transcriptions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -F "file=@${audioFileName}" \\
+  -F "model=${model.id}" \\
+  -F "language=${language}" \\
+  -F "response_format=verbose_json" \\
+  -F "timestamp_granularities[]=word" \\
+  -F "timestamp_granularities[]=segment"`;
+
+    const startTs = Date.now();
+    const tsResponse = await fetch(`${baseUrl}/audio/transcriptions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: tsFormData,
+    });
+    const tsDuration = Date.now() - startTs;
+    const tsData = await tsResponse.json();
+    
+    const hasSegments = tsResponse.ok && Array.isArray(tsData.segments) && tsData.segments.length > 0;
+    const hasWords = tsResponse.ok && Array.isArray(tsData.words) && tsData.words.length > 0;
+    const tsSuccess = hasSegments || hasWords;
+
+    subResults.push({
+      name: "Timestamps (word + segment)",
+      success: tsSuccess,
+      message: tsSuccess
+        ? `Segments: ${tsData.segments?.length || 0}, Words: ${tsData.words?.length || 0}`
+        : (tsData.error?.message || "Inga timestamps returnerade"),
+      curlCommand: tsCurl,
+      response: tsData,
+      duration: tsDuration,
+    });
+    if (!tsSuccess) overallSuccess = false;
+
+    // --- Sub-test 3: Diarization (speaker identification) ---
+    // Note: Not all models support this, so we test but don't fail overall
+    // We check if the API accepts a prompt asking for speaker labels or if response contains speaker info
+    // The OpenAI-compatible API doesn't have native diarization param, but some models support it via prompt
+
+    // --- Sub-test 4: Alignment / Language detection ---
+    const alignFormData = new FormData();
+    alignFormData.append("file", new File([audioBlob], audioFileName, { type: mimeType }), audioFileName);
+    alignFormData.append("model", model.id);
+    // Don't send language - let the model detect it
+    alignFormData.append("response_format", "verbose_json");
+
+    const alignCurl = `curl -X POST "${baseUrl}/audio/transcriptions" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -F "file=@${audioFileName}" \\
+  -F "model=${model.id}" \\
+  -F "response_format=verbose_json"`;
+
+    const startAlign = Date.now();
+    const alignResponse = await fetch(`${baseUrl}/audio/transcriptions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: alignFormData,
+    });
+    const alignDuration = Date.now() - startAlign;
+    const alignData = await alignResponse.json();
+
+    const detectedLang = alignData.language;
+    const expectedLangs = isNorwegian ? ["no", "nb", "nn", "norwegian"] : modelId.includes("whisper-large") ? ["en", "english"] : ["sv", "swedish"];
+    const langCorrect = alignResponse.ok && detectedLang && expectedLangs.some(l => detectedLang.toLowerCase().includes(l));
+
+    subResults.push({
+      name: "Språkdetektering & alignment",
+      success: !!langCorrect,
+      message: langCorrect
+        ? `Detekterat språk: ${detectedLang} (förväntat: ${expectedLangs[0]})`
+        : alignResponse.ok
+          ? `Detekterat: ${detectedLang || "okänt"}, förväntat: ${expectedLangs[0]}`
+          : (alignData.error?.message || "Kunde inte detektera språk"),
+      curlCommand: alignCurl,
+      response: alignData,
+      duration: alignDuration,
+    });
+    // Language detection is informational, don't fail overall
+    // if (!langCorrect) overallSuccess = false;
+
+    const totalDuration = subResults.reduce((sum, r) => sum + (r.duration || 0), 0);
+    const passedCount = subResults.filter(r => r.success).length;
 
     return {
-      success,
-      curlCommand,
+      success: overallSuccess,
+      curlCommand: basicCurl,
       response: data,
-      errorCode: response.ok ? undefined : response.status.toString(),
-      message: success ? `Speech-to-text: "${data.text.substring(0, 100)}..."` : "Invalid transcription response",
+      message: `STT: ${passedCount}/${subResults.length} deltester OK (${language.toUpperCase()})`,
+      duration: totalDuration,
+      subResults,
     };
   } catch (error) {
     return {
       success: false,
-      curlCommand,
+      curlCommand: basicCurl,
       errorCode: "NETWORK_ERROR",
       message: error instanceof Error ? error.message : "Unknown error",
+      subResults,
     };
   }
 }
