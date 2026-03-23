@@ -1,4 +1,4 @@
-import { Model, TestDetail } from "../types/model";
+import { Model, TestDetail, SubResult } from "../types/model";
 import { encodeImageToBase64 } from "../utils/imageEncoder";
 import testImage from "../assets/test-image.jpg";
 import { LONG_TRANSCRIPTION } from "../data/longTranscription";
