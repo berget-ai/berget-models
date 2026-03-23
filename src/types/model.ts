@@ -38,6 +38,7 @@ export interface TestDetail {
   errorCode?: string;
   message?: string;
   tokensPerSecond?: number;
+  duration?: number;
   subResults?: SubResult[];
 }
 
