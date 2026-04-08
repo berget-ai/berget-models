@@ -1,6 +1,7 @@
 import { Model, TestDetail, SubResult } from "../types/model";
 import { encodeImageToBase64 } from "../utils/imageEncoder";
 import testImage from "../assets/test-image.jpg";
+import testVisionShapes from "../assets/test-vision-shapes.jpg";
 import { LONG_TRANSCRIPTION } from "../data/longTranscription";
 
 function calculateTPS(response: any, durationMs: number): number | undefined {
@@ -1093,7 +1094,7 @@ export async function testMultimodal(model: Model, apiKey: string, baseUrl: stri
   let base64Image: string;
 
   try {
-    base64Image = await encodeImageToBase64(testImage);
+    base64Image = await encodeImageToBase64(testVisionShapes);
   } catch (error) {
     return {
       success: false,
@@ -1103,7 +1104,10 @@ export async function testMultimodal(model: Model, apiKey: string, baseUrl: stri
     };
   }
 
-  const textPrompt = formatPrompt("What do you see in this image? Please describe it briefly.", model.id);
+  const textPrompt = formatPrompt(
+    "Describe the shapes and their colors in this image. List each shape and its color.",
+    model.id
+  );
   const requestBody = {
     model: model.id,
     messages: [
@@ -1148,33 +1152,102 @@ export async function testMultimodal(model: Model, apiKey: string, baseUrl: stri
 
     const rawContent = data.choices?.[0]?.message?.content || "";
     const content = stripThinkingBlocks(rawContent);
+    const contentLower = content.toLowerCase();
+
+    // Check if the model claims it can't see the image
     const imageNotSeenPhrases = [
-      "can't see",
-      "cannot see",
-      "not able to see",
-      "no image",
-      "not attached",
-      "nothing was attached",
-      "didn't receive",
-      "no picture",
-      "don't see",
+      "can't see", "cannot see", "not able to see", "no image",
+      "not attached", "nothing was attached", "didn't receive",
+      "no picture", "don't see",
+    ];
+    const modelDidNotSeeImage = imageNotSeenPhrases.some((phrase) => contentLower.includes(phrase));
+
+    // Validate that the model actually recognized the known content:
+    // The image contains a red circle, a blue triangle, and a green square
+    const expectedKeywords = [
+      { shape: "circle", found: false },
+      { shape: "triangle", found: false },
+      { shape: "square", found: false },
     ];
 
-    const contentLower = content.toLowerCase();
-    const modelDidNotSeeImage = imageNotSeenPhrases.some((phrase) => contentLower.includes(phrase));
-    const success = response.ok && content.length > 0 && !modelDidNotSeeImage;
+    const shapeAliases: Record<string, string[]> = {
+      circle: ["circle", "circular", "round", "dot", "sphere", "oval"],
+      triangle: ["triangle", "triangular", "pyramid"],
+      square: ["square", "rectangle", "rectangular", "cube", "block"],
+    };
+
+    const colorKeywords = ["red", "blue", "green"];
+
+    let shapesFound = 0;
+    let colorsFound = 0;
+
+    for (const kw of expectedKeywords) {
+      const aliases = shapeAliases[kw.shape] || [kw.shape];
+      if (aliases.some((alias) => contentLower.includes(alias))) {
+        kw.found = true;
+        shapesFound++;
+      }
+    }
+
+    for (const color of colorKeywords) {
+      if (contentLower.includes(color)) {
+        colorsFound++;
+      }
+    }
+
+    // Require at least 2 shapes and 2 colors to be mentioned
+    const contentValidated = shapesFound >= 2 && colorsFound >= 2;
+
+    const subResults: SubResult[] = [
+      {
+        name: "Image received",
+        success: !modelDidNotSeeImage && content.length > 0,
+        message: modelDidNotSeeImage
+          ? "Model reported it did not receive the image"
+          : content.length > 0
+            ? "Model produced a response"
+            : "Empty response",
+      },
+      {
+        name: "Shape recognition",
+        success: shapesFound >= 2,
+        message: `Recognized ${shapesFound}/3 shapes (${expectedKeywords.filter(k => k.found).map(k => k.shape).join(", ") || "none"})`,
+      },
+      {
+        name: "Color recognition",
+        success: colorsFound >= 2,
+        message: `Recognized ${colorsFound}/3 colors (${colorKeywords.filter(c => contentLower.includes(c)).join(", ") || "none"})`,
+      },
+    ];
+
+    // Token count validation: if prompt_tokens is suspiciously low, image was likely dropped
+    const promptTokens = data.usage?.prompt_tokens;
+    if (promptTokens !== undefined) {
+      const imageWasDropped = promptTokens < 50;
+      subResults.push({
+        name: "Token count check",
+        success: !imageWasDropped,
+        message: imageWasDropped
+          ? `Only ${promptTokens} prompt tokens — image likely silently dropped`
+          : `${promptTokens} prompt tokens — image data included`,
+      });
+    }
+
+    const success = response.ok && !modelDidNotSeeImage && contentValidated;
 
     return {
       success,
       curlCommand,
       response: data,
+      duration,
       tokensPerSecond: calculateTPS(data, duration),
+      subResults,
       errorCode: response.ok ? undefined : response.status.toString(),
       message: modelDidNotSeeImage
-        ? "Model did not receive or process the image"
-        : success
-          ? "Multimodal test successful"
-          : "Model did not process image",
+        ? "Model did not receive or process the image (silent drop)"
+        : !contentValidated
+          ? `Vision validation failed: ${shapesFound}/3 shapes, ${colorsFound}/3 colors recognized`
+          : "Vision test passed — model correctly identified shapes and colors",
     };
   } catch (error) {
     return {
