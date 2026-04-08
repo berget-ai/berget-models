@@ -1,6 +1,7 @@
 import { Model, TestDetail, SubResult } from "../types/model";
 import { encodeImageToBase64 } from "../utils/imageEncoder";
 import testImage from "../assets/test-image.jpg";
+import testVisionShapes from "../assets/test-vision-shapes.jpg";
 import { LONG_TRANSCRIPTION } from "../data/longTranscription";
 
 function calculateTPS(response: any, durationMs: number): number | undefined {
