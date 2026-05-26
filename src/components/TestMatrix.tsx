@@ -167,6 +167,20 @@ const TEST_FEATURES: TestFeature[] = [
     description: 'Audio transkription',
     testFunction: testSpeechToText,
     supportedTypes: ['speech-to-text']
+  },
+  {
+    id: 'firecrawl_scrape',
+    name: 'Firecrawl Scrape',
+    description: 'POST /v1/firecrawl/scrape mot example.com',
+    testFunction: testFirecrawlScrape,
+    supportedTypes: ['firecrawl']
+  },
+  {
+    id: 'firecrawl_map',
+    name: 'Firecrawl Map',
+    description: 'POST /v1/firecrawl/map mot example.com',
+    testFunction: testFirecrawlMap,
+    supportedTypes: ['firecrawl']
   }
 ];
 
