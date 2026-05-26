@@ -307,10 +307,8 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
       }
     }
     for (const model of sortedFirecrawlModels.filter(m => m.isUp !== false)) {
-      // Each firecrawl "model" maps to exactly one feature
-      const featureId = model.id.endsWith("/map") ? "firecrawl_map" : "firecrawl_scrape";
-      const feature = TEST_FEATURES.find(f => f.id === featureId);
-      if (feature) {
+      const relevantFeatures = getFeaturesForGroupType('firecrawl');
+      for (const feature of relevantFeatures) {
         await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
