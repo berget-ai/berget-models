@@ -654,7 +654,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
         {/* Test Matrix */}
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
           <CardContent className="p-6">
-            <Accordion type="multiple" defaultValue={["chat", "speech", "ocr", "utility"]} className="space-y-4">
+            <Accordion type="multiple" defaultValue={["chat", "speech", "ocr", "utility", "firecrawl"]} className="space-y-4">
               {/* Chat Models */}
               {getModelsByType().chatModels.length > 0 && (
                 <AccordionItem value="chat" className="border border-border/50 rounded-lg">
