@@ -472,8 +472,9 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
       const type = m.type;
       return type === 'rerank' || type === 'embedding';
     });
+    const firecrawlModels = models.filter(m => m.type === 'firecrawl');
     
-    return { chatModels, speechModels, ocrModels, utilityModels };
+    return { chatModels, speechModels, ocrModels, utilityModels, firecrawlModels };
   };
 
   const getFeaturesForGroupType = (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
@@ -481,7 +482,8 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
       'chat': ['chat'],
       'speech-to-text': ['speech-to-text'],
       'ocr': ['ocr'],
-      'utility': ['embedding', 'rerank']
+      'utility': ['embedding', 'rerank'],
+      'firecrawl': ['firecrawl']
     };
     const supportedTypes = typeMapping[groupType] || [];
     return TEST_FEATURES.filter(feature => 
