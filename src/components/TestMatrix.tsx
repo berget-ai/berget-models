@@ -862,6 +862,58 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                   </AccordionContent>
                 </AccordionItem>
               )}
+
+              {/* Firecrawl Endpoints */}
+              {getModelsByType().firecrawlModels.length > 0 && (
+                <AccordionItem value="firecrawl" className="border border-border/50 rounded-lg">
+                  <AccordionTrigger className="px-4 hover:no-underline">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-semibold">Firecrawl Endpoints</h3>
+                      <Badge variant="secondary">{getModelsByType().firecrawlModels.length} endpoints</Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="overflow-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
+                          <TableRow className="hover:bg-transparent">
+                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
+                              <Button
+                                size="sm"
+                                onClick={() => runGroupTests('firecrawl')}
+                                className="gap-1 bg-[hsl(40,30%,92%)] text-black hover:bg-[hsl(40,30%,85%)]"
+                              >
+                                <Play className="h-4 w-4" />
+                                Testa alla
+                              </Button>
+                            </TableHead>
+                            {getFeaturesForGroupType('firecrawl').map((feature) => (
+                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
+                                <div className="flex flex-col items-center space-y-1">
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => runFeatureTests(feature, 'firecrawl')}
+                                      className="h-5 w-5 p-0 hover:bg-primary/20"
+                                      title={`Kör ${feature.name} för alla endpoints`}
+                                    >
+                                      <Play className="h-3 w-3 text-primary" />
+                                    </Button>
+                                    <span className="font-semibold text-foreground">{feature.name}</span>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">{feature.description}</span>
+                                </div>
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        {renderModelGroup(getModelsByType().firecrawlModels, 'Firecrawl', 'firecrawl')}
+                      </Table>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
             </Accordion>
           </CardContent>
         </Card>
