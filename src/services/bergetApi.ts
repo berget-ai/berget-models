@@ -82,23 +82,14 @@ export async function fetchModels(apiKey: string, baseUrl: string): Promise<Mode
     });
   }
 
-  // Add synthetic Firecrawl "models" representing the /v1/firecrawl endpoints
-  mappedModels.push(
-    {
-      id: "firecrawl/scrape",
-      object: "model",
-      created: Date.now(),
-      owned_by: "berget",
-      type: "firecrawl" as const,
-    },
-    {
-      id: "firecrawl/map",
-      object: "model",
-      created: Date.now(),
-      owned_by: "berget",
-      type: "firecrawl" as const,
-    },
-  );
+  // Add synthetic Firecrawl "model" representing the /v1/firecrawl endpoints
+  mappedModels.push({
+    id: "firecrawl",
+    object: "model",
+    created: Date.now(),
+    owned_by: "berget",
+    type: "firecrawl" as const,
+  });
 
   return mappedModels;
 }
