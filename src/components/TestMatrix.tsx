@@ -332,6 +332,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
       if (groupType === 'speech-to-text') return modelType === 'speech-to-text';
       if (groupType === 'utility') return modelType === 'rerank' || modelType === 'embedding';
       if (groupType === 'ocr') return modelType === 'ocr';
+      if (groupType === 'firecrawl') return modelType === 'firecrawl';
       return false;
     });
 
@@ -348,7 +349,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     
     setIsRunningTests(false);
     toast({
-      title: `${groupType === 'chat' ? 'Chat' : groupType === 'speech-to-text' ? 'Speech' : groupType === 'ocr' ? 'OCR' : 'Utility'} tester slutförda`,
+      title: `${groupType === 'chat' ? 'Chat' : groupType === 'speech-to-text' ? 'Speech' : groupType === 'ocr' ? 'OCR' : groupType === 'firecrawl' ? 'Firecrawl' : 'Utility'} tester slutförda`,
       description: `Testade ${sortedModels.length} modeller`,
     });
   };
@@ -380,6 +381,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
       if (groupType === 'speech-to-text') return modelType === 'speech-to-text';
       if (groupType === 'utility') return modelType === 'rerank' || modelType === 'embedding';
       if (groupType === 'ocr') return modelType === 'ocr';
+      if (groupType === 'firecrawl') return modelType === 'firecrawl';
       return false;
     });
 
