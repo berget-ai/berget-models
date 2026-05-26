@@ -313,7 +313,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     });
   };
 
-  const runGroupTests = async (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+  const runGroupTests = async (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
     setIsRunningTests(true);
     
     const groupModels = models.filter(model => {
@@ -344,7 +344,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
   };
 
   // Kör alla tester för en specifik modell (rad)
-  const runModelTests = async (model: Model, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+  const runModelTests = async (model: Model, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
     setIsRunningTests(true);
     const relevantFeatures = getFeaturesForGroupType(groupType);
     
@@ -361,7 +361,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
   };
 
   // Kör ett specifikt test för alla modeller i gruppen (kolumn)
-  const runFeatureTests = async (feature: TestFeature, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+  const runFeatureTests = async (feature: TestFeature, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
     setIsRunningTests(true);
     
     const groupModels = models.filter(model => {
@@ -476,7 +476,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     return { chatModels, speechModels, ocrModels, utilityModels };
   };
 
-  const getFeaturesForGroupType = (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+  const getFeaturesForGroupType = (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
     const typeMapping: Record<string, string[]> = {
       'chat': ['chat'],
       'speech-to-text': ['speech-to-text'],
@@ -489,7 +489,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     );
   };
 
-  const renderModelGroup = (groupModels: Model[], groupName: string, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+  const renderModelGroup = (groupModels: Model[], groupName: string, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
     if (groupModels.length === 0) return null;
     const relevantFeatures = getFeaturesForGroupType(groupType);
 
