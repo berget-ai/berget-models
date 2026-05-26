@@ -270,11 +270,12 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
 
   const runAllTests = async () => {
     setIsRunningTests(true);
-    const { chatModels, speechModels, ocrModels, utilityModels } = getModelsByType();
+    const { chatModels, speechModels, ocrModels, utilityModels, firecrawlModels } = getModelsByType();
     const sortedChatModels = [...chatModels].sort((a, b) => a.id.localeCompare(b.id));
     const sortedSpeechModels = [...speechModels].sort((a, b) => a.id.localeCompare(b.id));
     const sortedOcrModels = [...ocrModels].sort((a, b) => a.id.localeCompare(b.id));
     const sortedUtilityModels = [...utilityModels].sort((a, b) => a.id.localeCompare(b.id));
+    const sortedFirecrawlModels = [...firecrawlModels].sort((a, b) => a.id.localeCompare(b.id));
     
     // Kör i samma ordning som på skärmen
     for (const model of sortedChatModels.filter(m => m.isUp !== false)) {
@@ -301,6 +302,15 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     for (const model of sortedUtilityModels.filter(m => m.isUp !== false)) {
       const relevantFeatures = getFeaturesForGroupType('utility');
       for (const feature of relevantFeatures) {
+        await runTest(model, feature);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    for (const model of sortedFirecrawlModels.filter(m => m.isUp !== false)) {
+      // Each firecrawl "model" maps to exactly one feature
+      const featureId = model.id.endsWith("/map") ? "firecrawl_map" : "firecrawl_scrape";
+      const feature = TEST_FEATURES.find(f => f.id === featureId);
+      if (feature) {
         await runTest(model, feature);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
