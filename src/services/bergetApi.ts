@@ -82,6 +82,15 @@ export async function fetchModels(apiKey: string, baseUrl: string): Promise<Mode
     });
   }
 
+  // Add synthetic Firecrawl "model" representing the /v1/firecrawl endpoints
+  mappedModels.push({
+    id: "firecrawl",
+    object: "model",
+    created: Date.now(),
+    owned_by: "berget",
+    type: "firecrawl" as const,
+  });
+
   return mappedModels;
 }
 
@@ -1794,6 +1803,164 @@ Return a JSON object with exactly these fields:
         message: `Failed to parse JSON response: ${parseError instanceof Error ? parseError.message : "Unknown parse error"}`,
       };
     }
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: "NETWORK_ERROR",
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+export async function testFirecrawlScrape(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const targetUrl = "https://example.com";
+  const requestBody = { url: targetUrl };
+
+  const curlCommand = `curl -X POST "${baseUrl}/firecrawl/scrape" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody)}'`;
+
+  try {
+    const response = await fetch(`${baseUrl}/firecrawl/scrape`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+
+    // Normalize possible response shapes (Firecrawl v2-style: { data: { markdown } } or flat { markdown })
+    const markdown: string | undefined =
+      data?.markdown || data?.data?.markdown || data?.content || data?.data?.content;
+    const html: string | undefined = data?.html || data?.data?.html;
+    const metadata = data?.metadata || data?.data?.metadata;
+    const body = markdown || html || "";
+
+    const subResults: SubResult[] = [];
+
+    const httpOk = response.ok;
+    subResults.push({
+      name: "HTTP 200 OK",
+      success: httpOk,
+      message: httpOk ? `Status ${response.status}` : `Status ${response.status}`,
+    });
+
+    const hasContent = body.length > 50;
+    subResults.push({
+      name: "Innehåll returnerat",
+      success: hasContent,
+      message: hasContent ? `${body.length} tecken returnerade` : "Tomt/för kort innehåll",
+    });
+
+    // example.com always contains "Example Domain"
+    const hasExpected = /example domain/i.test(body);
+    subResults.push({
+      name: "Förväntat innehåll hittat",
+      success: hasExpected,
+      message: hasExpected
+        ? "Texten 'Example Domain' hittades"
+        : "Saknar förväntad text 'Example Domain'",
+    });
+
+    const hasMetadata = !!metadata;
+    subResults.push({
+      name: "Metadata returnerad",
+      success: hasMetadata,
+      message: hasMetadata ? "Metadata-objekt finns" : "Ingen metadata i svar",
+    });
+
+    const success = httpOk && hasContent && hasExpected;
+
+    return {
+      success,
+      curlCommand,
+      response: data,
+      errorCode: httpOk ? undefined : response.status.toString(),
+      message: success
+        ? `Firecrawl scrape OK (${body.length} tecken)`
+        : "Firecrawl scrape misslyckades – se delresultat",
+      subResults,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      curlCommand,
+      errorCode: "NETWORK_ERROR",
+      message: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+export async function testFirecrawlMap(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+  const targetUrl = "https://example.com";
+  const requestBody = { url: targetUrl };
+
+  const curlCommand = `curl -X POST "${baseUrl}/firecrawl/map" \\
+  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(requestBody)}'`;
+
+  try {
+    const response = await fetch(`${baseUrl}/firecrawl/map`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const data = await response.json();
+
+    // Normalize possible shapes: { links: [...] } or { data: { links: [...] } } or array of objects with url
+    const rawLinks: any[] =
+      data?.links || data?.data?.links || data?.urls || data?.data?.urls || [];
+    const links: string[] = Array.isArray(rawLinks)
+      ? rawLinks.map((l) => (typeof l === "string" ? l : l?.url)).filter(Boolean)
+      : [];
+
+    const subResults: SubResult[] = [];
+
+    const httpOk = response.ok;
+    subResults.push({
+      name: "HTTP 200 OK",
+      success: httpOk,
+      message: `Status ${response.status}`,
+    });
+
+    const hasLinks = links.length > 0;
+    subResults.push({
+      name: "Länkar returnerade",
+      success: hasLinks,
+      message: hasLinks ? `${links.length} länkar hittade` : "Inga länkar i svaret",
+    });
+
+    const allValidUrls = hasLinks && links.every((l) => /^https?:\/\//.test(l));
+    subResults.push({
+      name: "Giltiga URL:er",
+      success: allValidUrls,
+      message: allValidUrls
+        ? "Alla länkar är giltiga http(s)-URL:er"
+        : "Minst en länk saknar http(s)-prefix",
+    });
+
+    const success = httpOk && hasLinks && allValidUrls;
+
+    return {
+      success,
+      curlCommand,
+      response: data,
+      errorCode: httpOk ? undefined : response.status.toString(),
+      message: success
+        ? `Firecrawl map OK (${links.length} länkar)`
+        : "Firecrawl map misslyckades – se delresultat",
+      subResults,
+    };
   } catch (error) {
     return {
       success: false,

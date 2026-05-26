@@ -42,7 +42,9 @@ import {
   testReranking,
   testSpeechToText,
   testTPS,
-  testLongContextJson
+  testLongContextJson,
+  testFirecrawlScrape,
+  testFirecrawlMap
 } from '../services/bergetApi';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -165,6 +167,20 @@ const TEST_FEATURES: TestFeature[] = [
     description: 'Audio transkription',
     testFunction: testSpeechToText,
     supportedTypes: ['speech-to-text']
+  },
+  {
+    id: 'firecrawl_scrape',
+    name: 'Firecrawl Scrape',
+    description: 'POST /v1/firecrawl/scrape mot example.com',
+    testFunction: testFirecrawlScrape,
+    supportedTypes: ['firecrawl']
+  },
+  {
+    id: 'firecrawl_map',
+    name: 'Firecrawl Map',
+    description: 'POST /v1/firecrawl/map mot example.com',
+    testFunction: testFirecrawlMap,
+    supportedTypes: ['firecrawl']
   }
 ];
 
@@ -254,11 +270,12 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
 
   const runAllTests = async () => {
     setIsRunningTests(true);
-    const { chatModels, speechModels, ocrModels, utilityModels } = getModelsByType();
+    const { chatModels, speechModels, ocrModels, utilityModels, firecrawlModels } = getModelsByType();
     const sortedChatModels = [...chatModels].sort((a, b) => a.id.localeCompare(b.id));
     const sortedSpeechModels = [...speechModels].sort((a, b) => a.id.localeCompare(b.id));
     const sortedOcrModels = [...ocrModels].sort((a, b) => a.id.localeCompare(b.id));
     const sortedUtilityModels = [...utilityModels].sort((a, b) => a.id.localeCompare(b.id));
+    const sortedFirecrawlModels = [...firecrawlModels].sort((a, b) => a.id.localeCompare(b.id));
     
     // Kör i samma ordning som på skärmen
     for (const model of sortedChatModels.filter(m => m.isUp !== false)) {
@@ -289,6 +306,13 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
+    for (const model of sortedFirecrawlModels.filter(m => m.isUp !== false)) {
+      const relevantFeatures = getFeaturesForGroupType('firecrawl');
+      for (const feature of relevantFeatures) {
+        await runTest(model, feature);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
     
     setIsRunningTests(false);
     toast({
@@ -297,7 +321,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     });
   };
 
-  const runGroupTests = async (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+  const runGroupTests = async (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
     setIsRunningTests(true);
     
     const groupModels = models.filter(model => {
@@ -306,6 +330,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
       if (groupType === 'speech-to-text') return modelType === 'speech-to-text';
       if (groupType === 'utility') return modelType === 'rerank' || modelType === 'embedding';
       if (groupType === 'ocr') return modelType === 'ocr';
+      if (groupType === 'firecrawl') return modelType === 'firecrawl';
       return false;
     });
 
@@ -322,13 +347,13 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     
     setIsRunningTests(false);
     toast({
-      title: `${groupType === 'chat' ? 'Chat' : groupType === 'speech-to-text' ? 'Speech' : groupType === 'ocr' ? 'OCR' : 'Utility'} tester slutförda`,
+      title: `${groupType === 'chat' ? 'Chat' : groupType === 'speech-to-text' ? 'Speech' : groupType === 'ocr' ? 'OCR' : groupType === 'firecrawl' ? 'Firecrawl' : 'Utility'} tester slutförda`,
       description: `Testade ${sortedModels.length} modeller`,
     });
   };
 
   // Kör alla tester för en specifik modell (rad)
-  const runModelTests = async (model: Model, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+  const runModelTests = async (model: Model, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
     setIsRunningTests(true);
     const relevantFeatures = getFeaturesForGroupType(groupType);
     
@@ -345,7 +370,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
   };
 
   // Kör ett specifikt test för alla modeller i gruppen (kolumn)
-  const runFeatureTests = async (feature: TestFeature, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+  const runFeatureTests = async (feature: TestFeature, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
     setIsRunningTests(true);
     
     const groupModels = models.filter(model => {
@@ -354,6 +379,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
       if (groupType === 'speech-to-text') return modelType === 'speech-to-text';
       if (groupType === 'utility') return modelType === 'rerank' || modelType === 'embedding';
       if (groupType === 'ocr') return modelType === 'ocr';
+      if (groupType === 'firecrawl') return modelType === 'firecrawl';
       return false;
     });
 
@@ -456,16 +482,18 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
       const type = m.type;
       return type === 'rerank' || type === 'embedding';
     });
+    const firecrawlModels = models.filter(m => m.type === 'firecrawl');
     
-    return { chatModels, speechModels, ocrModels, utilityModels };
+    return { chatModels, speechModels, ocrModels, utilityModels, firecrawlModels };
   };
 
-  const getFeaturesForGroupType = (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+  const getFeaturesForGroupType = (groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
     const typeMapping: Record<string, string[]> = {
       'chat': ['chat'],
       'speech-to-text': ['speech-to-text'],
       'ocr': ['ocr'],
-      'utility': ['embedding', 'rerank']
+      'utility': ['embedding', 'rerank'],
+      'firecrawl': ['firecrawl']
     };
     const supportedTypes = typeMapping[groupType] || [];
     return TEST_FEATURES.filter(feature => 
@@ -473,7 +501,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     );
   };
 
-  const renderModelGroup = (groupModels: Model[], groupName: string, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr') => {
+  const renderModelGroup = (groupModels: Model[], groupName: string, groupType: 'chat' | 'speech-to-text' | 'utility' | 'ocr' | 'firecrawl') => {
     if (groupModels.length === 0) return null;
     const relevantFeatures = getFeaturesForGroupType(groupType);
 
@@ -624,7 +652,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
         {/* Test Matrix */}
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
           <CardContent className="p-6">
-            <Accordion type="multiple" defaultValue={["chat", "speech", "ocr", "utility"]} className="space-y-4">
+            <Accordion type="multiple" defaultValue={["chat", "speech", "ocr", "utility", "firecrawl"]} className="space-y-4">
               {/* Chat Models */}
               {getModelsByType().chatModels.length > 0 && (
                 <AccordionItem value="chat" className="border border-border/50 rounded-lg">
@@ -827,6 +855,58 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                           </TableRow>
                         </TableHeader>
                         {renderModelGroup(getModelsByType().utilityModels, 'Utility', 'utility')}
+                      </Table>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )}
+
+              {/* Firecrawl Endpoints */}
+              {getModelsByType().firecrawlModels.length > 0 && (
+                <AccordionItem value="firecrawl" className="border border-border/50 rounded-lg">
+                  <AccordionTrigger className="px-4 hover:no-underline">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-semibold">Firecrawl Endpoints</h3>
+                      <Badge variant="secondary">{getModelsByType().firecrawlModels.length} endpoints</Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="overflow-auto">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
+                          <TableRow className="hover:bg-transparent">
+                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
+                              <Button
+                                size="sm"
+                                onClick={() => runGroupTests('firecrawl')}
+                                className="gap-1 bg-[hsl(40,30%,92%)] text-black hover:bg-[hsl(40,30%,85%)]"
+                              >
+                                <Play className="h-4 w-4" />
+                                Testa alla
+                              </Button>
+                            </TableHead>
+                            {getFeaturesForGroupType('firecrawl').map((feature) => (
+                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
+                                <div className="flex flex-col items-center space-y-1">
+                                  <div className="flex items-center gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => runFeatureTests(feature, 'firecrawl')}
+                                      className="h-5 w-5 p-0 hover:bg-primary/20"
+                                      title={`Kör ${feature.name} för alla endpoints`}
+                                    >
+                                      <Play className="h-3 w-3 text-primary" />
+                                    </Button>
+                                    <span className="font-semibold text-foreground">{feature.name}</span>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">{feature.description}</span>
+                                </div>
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        {renderModelGroup(getModelsByType().firecrawlModels, 'Firecrawl', 'firecrawl')}
                       </Table>
                     </div>
                   </AccordionContent>
