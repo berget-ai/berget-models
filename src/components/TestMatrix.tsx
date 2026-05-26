@@ -42,7 +42,9 @@ import {
   testReranking,
   testSpeechToText,
   testTPS,
-  testLongContextJson
+  testLongContextJson,
+  testFirecrawlScrape,
+  testFirecrawlMap
 } from '../services/bergetApi';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
