@@ -1574,8 +1574,10 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
     name: string,
     extraFields: Record<string, string | string[]>,
     audioBlob: Blob,
-    opts: { failOnError?: boolean; expectError?: boolean } = { failOnError: true }
+    opts: { failOnError?: boolean; expectError?: boolean; fileName?: string; mime?: string } = { failOnError: true }
   ): Promise<{ ok: boolean; data: any; meta: ReturnType<typeof extractServerMeta> } | null> {
+    const useFileName = opts.fileName || audioFileName;
+    const useMime = opts.mime || mimeType;
     const formData = new FormData();
     formData.append("file", new File([audioBlob], audioFileName, { type: mimeType }), audioFileName);
     formData.append("model", model.id);
