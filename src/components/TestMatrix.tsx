@@ -824,7 +824,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                                   </TableCell>
                                   {STT_SUBTESTS.map((sub) => {
                                     const subRes = findSttSub(result, sub.num);
-                                    let icon: React.ReactNode;
+                                    let icon: ReactNode;
                                     if (model.isUp === false) {
                                       icon = <span className="text-xs text-muted-foreground/50">—</span>;
                                     } else if (isRunning && !subRes) {
