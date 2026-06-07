@@ -1579,13 +1579,13 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
     const useFileName = opts.fileName || audioFileName;
     const useMime = opts.mime || mimeType;
     const formData = new FormData();
-    formData.append("file", new File([audioBlob], audioFileName, { type: mimeType }), audioFileName);
+    formData.append("file", new File([audioBlob], useFileName, { type: useMime }), useFileName);
     formData.append("model", model.id);
 
     const curlParts = [
       `curl -X POST "${baseUrl}/audio/transcriptions"`,
       `-H "Authorization: Bearer ${apiKey.substring(0, 10)}..."`,
-      `-F "file=@${audioFileName}"`,
+      `-F "file=@${useFileName}"`,
       `-F "model=${model.id}"`,
     ];
 
