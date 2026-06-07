@@ -2,6 +2,10 @@ import { Model, TestDetail, SubResult } from "../types/model";
 import { encodeImageToBase64 } from "../utils/imageEncoder";
 import testImage from "../assets/test-image.jpg";
 import testVisionShapes from "../assets/test-vision-shapes.jpg";
+import audioDe from "../assets/audio/test-audio-de.mp3.asset.json";
+import audioFr from "../assets/audio/test-audio-fr.mp3.asset.json";
+import audioEs from "../assets/audio/test-audio-es.mp3.asset.json";
+import audioIt from "../assets/audio/test-audio-it.mp3.asset.json";
 import { LONG_TRANSCRIPTION } from "../data/longTranscription";
 
 function calculateTPS(response: any, durationMs: number): number | undefined {
@@ -1574,16 +1578,18 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
     name: string,
     extraFields: Record<string, string | string[]>,
     audioBlob: Blob,
-    opts: { failOnError?: boolean; expectError?: boolean } = { failOnError: true }
+    opts: { failOnError?: boolean; expectError?: boolean; fileName?: string; mime?: string } = { failOnError: true }
   ): Promise<{ ok: boolean; data: any; meta: ReturnType<typeof extractServerMeta> } | null> {
+    const useFileName = opts.fileName || audioFileName;
+    const useMime = opts.mime || mimeType;
     const formData = new FormData();
-    formData.append("file", new File([audioBlob], audioFileName, { type: mimeType }), audioFileName);
+    formData.append("file", new File([audioBlob], useFileName, { type: useMime }), useFileName);
     formData.append("model", model.id);
 
     const curlParts = [
       `curl -X POST "${baseUrl}/audio/transcriptions"`,
       `-H "Authorization: Bearer ${apiKey.substring(0, 10)}..."`,
-      `-F "file=@${audioFileName}"`,
+      `-F "file=@${useFileName}"`,
       `-F "model=${model.id}"`,
     ];
 
@@ -1739,6 +1745,60 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
       audioBlob,
       { failOnError: false }
     );
+
+    // 10-13. Flerspråkig auto-detektering (skippas för Norwegian-only modeller)
+    const multilingualSamples: Array<{ num: number; lang: string; label: string; expected: string[]; asset: { url: string } }> = [
+      { num: 10, lang: "de", label: "Tyska (DE)", expected: ["de", "german"], asset: audioDe },
+      { num: 11, lang: "fr", label: "Franska (FR)", expected: ["fr", "french"], asset: audioFr },
+      { num: 12, lang: "es", label: "Spanska (ES)", expected: ["es", "spanish"], asset: audioEs },
+      { num: 13, lang: "it", label: "Italienska (IT)", expected: ["it", "italian"], asset: audioIt },
+    ];
+
+    if (isNorwegian) {
+      // nb-whisper är norsk-only — markera som ej tillämpligt
+      for (const s of multilingualSamples) {
+        subResults.push({
+          name: `${s.num}. ${s.label} — ej tillämpligt (norsk-only modell)`,
+          success: true,
+          message: "Skippad: modellen stödjer endast norska",
+        });
+      }
+    } else {
+      for (const s of multilingualSamples) {
+        let langBlob: Blob;
+        try {
+          const r = await fetch(s.asset.url);
+          langBlob = await r.blob();
+        } catch (err) {
+          subResults.push({
+            name: `${s.num}. ${s.label} — nedladdning misslyckades`,
+            success: false,
+            message: err instanceof Error ? err.message : String(err),
+          });
+          overallSuccess = false;
+          continue;
+        }
+
+        const fileName = `test-audio-${s.lang}.mp3`;
+        const result = await runStt(
+          `${s.num}. ${s.label} — auto-detekt + transkription`,
+          { response_format: "verbose_json" },
+          langBlob,
+          { failOnError: false, fileName, mime: "audio/mpeg" }
+        );
+        if (result?.ok) {
+          const last = subResults[subResults.length - 1];
+          const detected = String(result.data?.language || "").toLowerCase();
+          const text = typeof result.data?.text === "string" ? result.data.text.trim() : "";
+          const langOk = s.expected.some((l) => detected.includes(l));
+          const textOk = text.length > 10;
+          last.success = langOk && textOk;
+          last.message = `Lang: ${detected || "?"} (förv: ${s.lang}) · "${text.substring(0, 60)}${text.length > 60 ? "…" : ""}" · ${last.message}`;
+          if (!last.success) overallSuccess = false;
+        }
+      }
+    }
+
 
     const totalDuration = subResults.reduce((sum, r) => sum + (r.duration || 0), 0);
     const passedCount = subResults.filter((r) => r.success).length;

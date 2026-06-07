@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -183,6 +183,27 @@ const TEST_FEATURES: TestFeature[] = [
     supportedTypes: ['firecrawl']
   }
 ];
+
+// STT-deltester visas som egna kolumner i Speech-sektionen.
+// `num` matchar prefixet i sub-result.name ("1. ...", "2. ...", osv.)
+const STT_SUBTESTS: Array<{ num: number; label: string; desc: string }> = [
+  { num: 1, label: 'Basic', desc: 'Grundläggande transkription' },
+  { num: 2, label: 'verbose_json', desc: 'verbose_json + timestamps (word/segment)' },
+  { num: 3, label: 'text', desc: 'response_format=text' },
+  { num: 4, label: 'srt', desc: 'response_format=srt' },
+  { num: 5, label: 'vtt', desc: 'response_format=vtt' },
+  { num: 6, label: 'Diarize', desc: 'diarize=true + verbose_json' },
+  { num: 7, label: 'Auto-lang', desc: 'Språk-autodetektering utan language-param' },
+  { num: 8, label: 'Fel språk', desc: 'Felaktigt språk — ska ej ge 5xx' },
+  { num: 9, label: 'Ogiltig kod', desc: 'language=xx — ska ge 4xx, ej 5xx' },
+  { num: 10, label: 'DE', desc: 'Tyska — auto-detect + transkription' },
+  { num: 11, label: 'FR', desc: 'Franska — auto-detect + transkription' },
+  { num: 12, label: 'ES', desc: 'Spanska — auto-detect + transkription' },
+  { num: 13, label: 'IT', desc: 'Italienska — auto-detect + transkription' },
+];
+
+const findSttSub = (result: TestResult | undefined, num: number): SubResult | undefined =>
+  result?.subResults?.find((s) => s.name.startsWith(`${num}.`));
 
 export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProps) {
   const [models, setModels] = useState<Model[]>([]);
@@ -705,57 +726,150 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                 </AccordionItem>
               )}
 
-              {/* Speech Models */}
-              {getModelsByType().speechModels.length > 0 && (
-                <AccordionItem value="speech" className="border border-border/50 rounded-lg">
-                  <AccordionTrigger className="px-4 hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-semibold">Speech-to-Text Modeller</h3>
-                      <Badge variant="secondary">{getModelsByType().speechModels.length} modeller</Badge>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="overflow-auto">
-                      <Table>
-                        <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
-                          <TableRow className="hover:bg-transparent">
-                            <TableHead className="font-semibold text-foreground min-w-[200px] bg-card/90 border-r border-border/30">
-                              <Button
-                                size="sm"
-                                onClick={() => runGroupTests('speech-to-text')}
-                                className="gap-1 bg-[hsl(40,30%,92%)] text-black hover:bg-[hsl(40,30%,85%)]"
-                              >
-                                <Play className="h-4 w-4" />
-                                Testa alla
-                              </Button>
-                            </TableHead>
-                            {getFeaturesForGroupType('speech-to-text').map((feature) => (
-                              <TableHead key={feature.id} className="text-center min-w-[120px] bg-card/90 border-r border-border/30 last:border-r-0">
-                                <div className="flex flex-col items-center space-y-1">
-                                  <div className="flex items-center gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => runFeatureTests(feature, 'speech-to-text')}
-                                      className="h-5 w-5 p-0 hover:bg-primary/20"
-                                      title={`Kör ${feature.name} för alla modeller`}
-                                    >
-                                      <Play className="h-3 w-3 text-primary" />
-                                    </Button>
-                                    <span className="font-semibold text-foreground">{feature.name}</span>
-                                  </div>
-                                  <span className="text-xs text-muted-foreground">{feature.description}</span>
-                                </div>
+              {/* Speech Models — varje deltest visas som egen kolumn */}
+              {getModelsByType().speechModels.length > 0 && (() => {
+                const speechFeature = TEST_FEATURES.find(f => f.id === 'speech')!;
+                const sortedSpeechModels = [...getModelsByType().speechModels].sort((a, b) => a.id.localeCompare(b.id));
+                return (
+                  <AccordionItem value="speech" className="border border-border/50 rounded-lg">
+                    <AccordionTrigger className="px-4 hover:no-underline">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold">Speech-to-Text Modeller</h3>
+                        <Badge variant="secondary">{getModelsByType().speechModels.length} modeller</Badge>
+                        <Badge variant="outline" className="text-xs">{STT_SUBTESTS.length} deltester</Badge>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="overflow-auto">
+                        <Table>
+                          <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
+                            <TableRow className="hover:bg-transparent">
+                              <TableHead className="font-semibold text-foreground min-w-[220px] bg-card/90 border-r border-border/30 sticky left-0 z-20">
+                                <Button
+                                  size="sm"
+                                  onClick={() => runGroupTests('speech-to-text')}
+                                  className="gap-1 bg-[hsl(40,30%,92%)] text-black hover:bg-[hsl(40,30%,85%)]"
+                                >
+                                  <Play className="h-4 w-4" />
+                                  Testa alla
+                                </Button>
                               </TableHead>
-                            ))}
-                          </TableRow>
-                        </TableHeader>
-                        {renderModelGroup(getModelsByType().speechModels, 'Speech', 'speech-to-text')}
-                      </Table>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              )}
+                              {STT_SUBTESTS.map((sub) => (
+                                <TableHead
+                                  key={sub.num}
+                                  className="text-center min-w-[110px] bg-card/90 border-r border-border/30 last:border-r-0"
+                                >
+                                  <TooltipProvider delayDuration={150}>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="flex flex-col items-center space-y-0.5 cursor-help">
+                                          <span className="text-[10px] text-muted-foreground font-mono">#{sub.num}</span>
+                                          <span className="font-semibold text-foreground text-sm">{sub.label}</span>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="bottom" className="max-w-xs">
+                                        <p className="text-xs">{sub.desc}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                </TableHead>
+                              ))}
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {sortedSpeechModels.map((model) => {
+                              const testKey = getTestKey(model.id, 'speech');
+                              const result = testResults.get(testKey);
+                              const isRunning = result?.status === 'testing';
+                              return (
+                                <TableRow
+                                  key={model.id}
+                                  className={`border-border/30 transition-colors ${model.isUp === false ? 'opacity-40' : 'hover:bg-muted/30'}`}
+                                >
+                                  <TableCell className="font-medium sticky left-0 bg-card/95 backdrop-blur-sm z-10 border-r border-border/30">
+                                    <div className="flex items-center space-x-2">
+                                      {model.isUp !== false ? (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => runTest(model, speechFeature)}
+                                          className="h-6 w-6 p-0 hover:bg-primary/20"
+                                          title={`Kör STT-deltester för ${model.id}`}
+                                        >
+                                          {isRunning ? (
+                                            <Loader2 className="h-3 w-3 animate-spin text-warning" />
+                                          ) : (
+                                            <Play className="h-3 w-3 text-primary" />
+                                          )}
+                                        </Button>
+                                      ) : (
+                                        <div className="h-6 w-6 flex items-center justify-center">
+                                          <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+                                        </div>
+                                      )}
+                                      <div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-semibold text-foreground">{model.id}</span>
+                                          {model.isUp === false && (
+                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-muted-foreground/30 text-muted-foreground">
+                                              offline
+                                            </Badge>
+                                          )}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                          {model.owned_by} • {model.type}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  {STT_SUBTESTS.map((sub) => {
+                                    const subRes = findSttSub(result, sub.num);
+                                    let icon: ReactNode;
+                                    if (model.isUp === false) {
+                                      icon = <span className="text-xs text-muted-foreground/50">—</span>;
+                                    } else if (isRunning && !subRes) {
+                                      icon = <Loader2 className="h-4 w-4 animate-spin text-warning" />;
+                                    } else if (!subRes) {
+                                      icon = <Circle className="h-4 w-4 text-muted-foreground" />;
+                                    } else if (subRes.success) {
+                                      icon = <Check className="h-4 w-4 text-success" />;
+                                    } else {
+                                      icon = <X className="h-4 w-4 text-destructive" />;
+                                    }
+                                    const clickable = !!result && model.isUp !== false;
+                                    return (
+                                      <TableCell key={sub.num} className="text-center">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-8 w-8 p-0 hover:bg-muted/50"
+                                          onClick={() => {
+                                            if (clickable) {
+                                              setSelectedResult(result!);
+                                              setIsDetailOpen(true);
+                                            } else if (model.isUp !== false) {
+                                              runTest(model, speechFeature);
+                                            }
+                                          }}
+                                          title={subRes?.message || sub.desc}
+                                        >
+                                          {icon}
+                                        </Button>
+                                      </TableCell>
+                                    );
+                                  })}
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })()}
+
+
 
               {/* OCR Models */}
               {getModelsByType().ocrModels.length > 0 && (
