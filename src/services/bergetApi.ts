@@ -1517,29 +1517,50 @@ export async function testReranking(model: Model, apiKey: string, baseUrl: strin
   }
 }
 
+// Helper: extract request id + status info for bug reports
+function extractServerMeta(response: Response): { requestId: string | null; status: number; statusText: string } {
+  const requestId =
+    response.headers.get("x-request-id") ||
+    response.headers.get("x-berget-request-id") ||
+    response.headers.get("cf-ray") ||
+    null;
+  return { requestId, status: response.status, statusText: response.statusText };
+}
+
+function formatServerMeta(meta: { requestId: string | null; status: number; statusText: string }): string {
+  const parts = [`HTTP ${meta.status} ${meta.statusText}`.trim()];
+  if (meta.requestId) parts.push(`req-id: ${meta.requestId}`);
+  return parts.join(" · ");
+}
+
+// Detects the "silent server error" pattern: HTTP 5xx with generic INTERNAL_ERROR
+function isInternalServerError(status: number, data: any): boolean {
+  if (status < 500) return false;
+  const code = data?.error?.code || data?.code;
+  return code === "INTERNAL_ERROR" || code === "internal_error" || status >= 500;
+}
+
 export async function testSpeechToText(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
   const modelId = model.id.toLowerCase();
   const isNorwegian = modelId.includes("nb-whisper") || modelId.includes("nb_whisper");
-  const isSwedish = !isNorwegian && !modelId.includes("whisper-large");
-  
-  // Pick audio file and language based on model
+  const isWhisperLarge = modelId.includes("whisper-large");
+
   let audioFile: string;
   let audioFileName: string;
   let language: string;
   let mimeType: string;
-  
+
   if (isNorwegian) {
     audioFile = "/test-audio-no.mp3";
     audioFileName = "test-audio-no.mp3";
     language = "no";
     mimeType = "audio/mpeg";
-  } else if (modelId.includes("whisper-large")) {
+  } else if (isWhisperLarge) {
     audioFile = "/test-audio-en.mp3";
     audioFileName = "test-audio-en.mp3";
     language = "en";
     mimeType = "audio/mpeg";
   } else {
-    // Default: Swedish audio
     audioFile = "/test-audio.m4a";
     audioFileName = "test-audio.m4a";
     language = "sv";
@@ -1549,7 +1570,94 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
   const subResults: SubResult[] = [];
   let overallSuccess = true;
 
-  // --- Sub-test 1: Basic transcription ---
+  async function runStt(
+    name: string,
+    extraFields: Record<string, string | string[]>,
+    audioBlob: Blob,
+    opts: { failOnError?: boolean; expectError?: boolean } = { failOnError: true }
+  ): Promise<{ ok: boolean; data: any; meta: ReturnType<typeof extractServerMeta> } | null> {
+    const formData = new FormData();
+    formData.append("file", new File([audioBlob], audioFileName, { type: mimeType }), audioFileName);
+    formData.append("model", model.id);
+
+    const curlParts = [
+      `curl -X POST "${baseUrl}/audio/transcriptions"`,
+      `-H "Authorization: Bearer ${apiKey.substring(0, 10)}..."`,
+      `-F "file=@${audioFileName}"`,
+      `-F "model=${model.id}"`,
+    ];
+
+    for (const [k, v] of Object.entries(extraFields)) {
+      if (Array.isArray(v)) {
+        for (const item of v) {
+          formData.append(k, item);
+          curlParts.push(`-F "${k}=${item}"`);
+        }
+      } else {
+        formData.append(k, v);
+        curlParts.push(`-F "${k}=${v}"`);
+      }
+    }
+
+    const curlCommand = curlParts.join(" \\\n  ");
+
+    const start = Date.now();
+    let response: Response;
+    try {
+      response = await fetch(`${baseUrl}/audio/transcriptions`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}` },
+        body: formData,
+      });
+    } catch (err) {
+      subResults.push({
+        name,
+        success: false,
+        message: `Nätverksfel: ${err instanceof Error ? err.message : String(err)}`,
+        curlCommand,
+        duration: Date.now() - start,
+      });
+      if (opts.failOnError) overallSuccess = false;
+      return null;
+    }
+    const duration = Date.now() - start;
+    const meta = extractServerMeta(response);
+
+    let data: any = null;
+    const ct = response.headers.get("content-type") || "";
+    try {
+      data = ct.includes("application/json") ? await response.json() : await response.text();
+    } catch {
+      data = "<failed to parse response>";
+    }
+
+    const serverErr = isInternalServerError(meta.status, data);
+    const apiErrMsg = typeof data === "object" && data ? data?.error?.message || data?.message : null;
+    const ok = response.ok && !serverErr;
+
+    let message: string;
+    if (serverErr) {
+      message = `🚨 Server-side fel (${formatServerMeta(meta)}). Rapportera till Berget med request-id ovan.`;
+    } else if (!response.ok) {
+      message = `${formatServerMeta(meta)} — ${apiErrMsg || "Okänt API-fel"}`;
+    } else {
+      message = formatServerMeta(meta);
+    }
+
+    subResults.push({
+      name,
+      success: opts.expectError ? !ok : ok,
+      message,
+      curlCommand,
+      response: data,
+      duration,
+      errorCode: !ok ? String(meta.status) : undefined,
+    });
+
+    if (opts.failOnError && !ok && !opts.expectError) overallSuccess = false;
+    return { ok, data, meta };
+  }
+
   const basicCurl = `curl -X POST "${baseUrl}/audio/transcriptions" \\
   -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
   -F "file=@${audioFileName}" \\
@@ -1560,128 +1668,90 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
     const audioResponse = await fetch(audioFile);
     const audioBlob = await audioResponse.blob();
 
-    const formData = new FormData();
-    formData.append("file", new File([audioBlob], audioFileName, { type: mimeType }), audioFileName);
-    formData.append("model", model.id);
-    formData.append("language", language);
+    // 1. Basic transcription
+    const basic = await runStt("1. Grundläggande transkription", { language }, audioBlob);
+    if (basic?.ok && typeof basic.data?.text === "string" && basic.data.text.trim().length > 0) {
+      const last = subResults[subResults.length - 1];
+      last.message = `"${basic.data.text.substring(0, 80)}..." · ${last.message}`;
+    } else if (basic?.ok) {
+      const last = subResults[subResults.length - 1];
+      last.success = false;
+      last.message = `Tom respons · ${last.message}`;
+      overallSuccess = false;
+    }
 
-    const startBasic = Date.now();
-    const response = await fetch(`${baseUrl}/audio/transcriptions`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}` },
-      body: formData,
-    });
-    const basicDuration = Date.now() - startBasic;
-    const data = await response.json();
-    const basicSuccess = response.ok && typeof data.text === "string" && data.text.trim().length > 0;
+    // 2. verbose_json with timestamps
+    const ts = await runStt(
+      "2. verbose_json + timestamps (word/segment)",
+      { language, response_format: "verbose_json", "timestamp_granularities[]": ["word", "segment"] },
+      audioBlob
+    );
+    if (ts?.ok) {
+      const last = subResults[subResults.length - 1];
+      const segs = ts.data?.segments?.length || 0;
+      const words = ts.data?.words?.length || 0;
+      last.success = segs > 0 || words > 0;
+      last.message = `Segments: ${segs}, Words: ${words} · ${last.message}`;
+      if (!last.success) overallSuccess = false;
+    }
 
-    subResults.push({
-      name: "Grundläggande transkription",
-      success: basicSuccess,
-      message: basicSuccess ? `"${data.text.substring(0, 80)}..."` : (data.error?.message || "Tom eller ogiltig respons"),
-      curlCommand: basicCurl,
-      response: data,
-      duration: basicDuration,
-    });
-    if (!basicSuccess) overallSuccess = false;
+    // 3-5. response_format varianter
+    await runStt("3. response_format=text", { language, response_format: "text" }, audioBlob);
+    await runStt("4. response_format=srt", { language, response_format: "srt" }, audioBlob);
+    await runStt("5. response_format=vtt", { language, response_format: "vtt" }, audioBlob);
 
-    // --- Sub-test 2: Timestamps ---
-    const tsFormData = new FormData();
-    tsFormData.append("file", new File([audioBlob], audioFileName, { type: mimeType }), audioFileName);
-    tsFormData.append("model", model.id);
-    tsFormData.append("language", language);
-    tsFormData.append("response_format", "verbose_json");
-    tsFormData.append("timestamp_granularities[]", "word");
-    tsFormData.append("timestamp_granularities[]", "segment");
+    // 6. Diarization (Davids bug-case)
+    await runStt(
+      "6. Diarization (diarize=true + verbose_json)",
+      { language, response_format: "verbose_json", diarize: "true" },
+      audioBlob,
+      { failOnError: false }
+    );
 
-    const tsCurl = `curl -X POST "${baseUrl}/audio/transcriptions" \\
-  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
-  -F "file=@${audioFileName}" \\
-  -F "model=${model.id}" \\
-  -F "language=${language}" \\
-  -F "response_format=verbose_json" \\
-  -F "timestamp_granularities[]=word" \\
-  -F "timestamp_granularities[]=segment"`;
+    // 7. Auto-detect language
+    const align = await runStt(
+      "7. Språk-autodetektering (verbose_json utan language)",
+      { response_format: "verbose_json" },
+      audioBlob
+    );
+    if (align?.ok) {
+      const last = subResults[subResults.length - 1];
+      const detected = align.data?.language;
+      const expected = isNorwegian ? ["no", "nb", "nn", "norwegian"] : isWhisperLarge ? ["en", "english"] : ["sv", "swedish"];
+      const langOk = detected && expected.some((l) => String(detected).toLowerCase().includes(l));
+      last.success = !!langOk;
+      last.message = `Detekterat: ${detected || "okänt"} (förväntat: ${expected[0]}) · ${last.message}`;
+    }
 
-    const startTs = Date.now();
-    const tsResponse = await fetch(`${baseUrl}/audio/transcriptions`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}` },
-      body: tsFormData,
-    });
-    const tsDuration = Date.now() - startTs;
-    const tsData = await tsResponse.json();
-    
-    const hasSegments = tsResponse.ok && Array.isArray(tsData.segments) && tsData.segments.length > 0;
-    const hasWords = tsResponse.ok && Array.isArray(tsData.words) && tsData.words.length > 0;
-    const tsSuccess = hasSegments || hasWords;
+    // 8. Fel språkkod — ska ej ge 500
+    const wrongLang = language === "de" ? "fr" : "de";
+    await runStt(
+      `8. Felaktigt språk (language=${wrongLang}) — ej 500`,
+      { language: wrongLang },
+      audioBlob,
+      { failOnError: false }
+    );
 
-    subResults.push({
-      name: "Timestamps (word + segment)",
-      success: tsSuccess,
-      message: tsSuccess
-        ? `Segments: ${tsData.segments?.length || 0}, Words: ${tsData.words?.length || 0}`
-        : (tsData.error?.message || "Inga timestamps returnerade"),
-      curlCommand: tsCurl,
-      response: tsData,
-      duration: tsDuration,
-    });
-    if (!tsSuccess) overallSuccess = false;
-
-    // --- Sub-test 3: Diarization (speaker identification) ---
-    // Note: Not all models support this, so we test but don't fail overall
-    // We check if the API accepts a prompt asking for speaker labels or if response contains speaker info
-    // The OpenAI-compatible API doesn't have native diarization param, but some models support it via prompt
-
-    // --- Sub-test 4: Alignment / Language detection ---
-    const alignFormData = new FormData();
-    alignFormData.append("file", new File([audioBlob], audioFileName, { type: mimeType }), audioFileName);
-    alignFormData.append("model", model.id);
-    // Don't send language - let the model detect it
-    alignFormData.append("response_format", "verbose_json");
-
-    const alignCurl = `curl -X POST "${baseUrl}/audio/transcriptions" \\
-  -H "Authorization: Bearer ${apiKey.substring(0, 10)}..." \\
-  -F "file=@${audioFileName}" \\
-  -F "model=${model.id}" \\
-  -F "response_format=verbose_json"`;
-
-    const startAlign = Date.now();
-    const alignResponse = await fetch(`${baseUrl}/audio/transcriptions`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}` },
-      body: alignFormData,
-    });
-    const alignDuration = Date.now() - startAlign;
-    const alignData = await alignResponse.json();
-
-    const detectedLang = alignData.language;
-    const expectedLangs = isNorwegian ? ["no", "nb", "nn", "norwegian"] : modelId.includes("whisper-large") ? ["en", "english"] : ["sv", "swedish"];
-    const langCorrect = alignResponse.ok && detectedLang && expectedLangs.some(l => detectedLang.toLowerCase().includes(l));
-
-    subResults.push({
-      name: "Språkdetektering & alignment",
-      success: !!langCorrect,
-      message: langCorrect
-        ? `Detekterat språk: ${detectedLang} (förväntat: ${expectedLangs[0]})`
-        : alignResponse.ok
-          ? `Detekterat: ${detectedLang || "okänt"}, förväntat: ${expectedLangs[0]}`
-          : (alignData.error?.message || "Kunde inte detektera språk"),
-      curlCommand: alignCurl,
-      response: alignData,
-      duration: alignDuration,
-    });
-    // Language detection is informational, don't fail overall
-    // if (!langCorrect) overallSuccess = false;
+    // 9. Ogiltig språkkod — ska ge 400, ej 500
+    await runStt(
+      "9. Ogiltig språkkod (language=xx) — ska ge 4xx ej 5xx",
+      { language: "xx" },
+      audioBlob,
+      { failOnError: false }
+    );
 
     const totalDuration = subResults.reduce((sum, r) => sum + (r.duration || 0), 0);
-    const passedCount = subResults.filter(r => r.success).length;
+    const passedCount = subResults.filter((r) => r.success).length;
+    const serverErrors = subResults.filter((r) => r.errorCode && parseInt(r.errorCode) >= 500).length;
+
+    let summary = `STT: ${passedCount}/${subResults.length} deltester OK (${language.toUpperCase()})`;
+    if (serverErrors > 0) summary += ` · ⚠️ ${serverErrors} server-side 5xx — se request-id`;
 
     return {
       success: overallSuccess,
       curlCommand: basicCurl,
-      response: data,
-      message: `STT: ${passedCount}/${subResults.length} deltester OK (${language.toUpperCase()})`,
+      response: basic?.data,
+      message: summary,
       duration: totalDuration,
       subResults,
     };
