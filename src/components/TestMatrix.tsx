@@ -184,6 +184,27 @@ const TEST_FEATURES: TestFeature[] = [
   }
 ];
 
+// STT-deltester visas som egna kolumner i Speech-sektionen.
+// `num` matchar prefixet i sub-result.name ("1. ...", "2. ...", osv.)
+const STT_SUBTESTS: Array<{ num: number; label: string; desc: string }> = [
+  { num: 1, label: 'Basic', desc: 'Grundläggande transkription' },
+  { num: 2, label: 'verbose_json', desc: 'verbose_json + timestamps (word/segment)' },
+  { num: 3, label: 'text', desc: 'response_format=text' },
+  { num: 4, label: 'srt', desc: 'response_format=srt' },
+  { num: 5, label: 'vtt', desc: 'response_format=vtt' },
+  { num: 6, label: 'Diarize', desc: 'diarize=true + verbose_json' },
+  { num: 7, label: 'Auto-lang', desc: 'Språk-autodetektering utan language-param' },
+  { num: 8, label: 'Fel språk', desc: 'Felaktigt språk — ska ej ge 5xx' },
+  { num: 9, label: 'Ogiltig kod', desc: 'language=xx — ska ge 4xx, ej 5xx' },
+  { num: 10, label: 'DE', desc: 'Tyska — auto-detect + transkription' },
+  { num: 11, label: 'FR', desc: 'Franska — auto-detect + transkription' },
+  { num: 12, label: 'ES', desc: 'Spanska — auto-detect + transkription' },
+  { num: 13, label: 'IT', desc: 'Italienska — auto-detect + transkription' },
+];
+
+const findSttSub = (result: TestResult | undefined, num: number): SubResult | undefined =>
+  result?.subResults?.find((s) => s.name.startsWith(`${num}.`));
+
 export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProps) {
   const [models, setModels] = useState<Model[]>([]);
   const [testResults, setTestResults] = useState<Map<string, TestResult>>(new Map());
