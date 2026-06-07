@@ -2,6 +2,10 @@ import { Model, TestDetail, SubResult } from "../types/model";
 import { encodeImageToBase64 } from "../utils/imageEncoder";
 import testImage from "../assets/test-image.jpg";
 import testVisionShapes from "../assets/test-vision-shapes.jpg";
+import audioDe from "../assets/audio/test-audio-de.mp3.asset.json";
+import audioFr from "../assets/audio/test-audio-fr.mp3.asset.json";
+import audioEs from "../assets/audio/test-audio-es.mp3.asset.json";
+import audioIt from "../assets/audio/test-audio-it.mp3.asset.json";
 import { LONG_TRANSCRIPTION } from "../data/longTranscription";
 
 function calculateTPS(response: any, durationMs: number): number | undefined {
