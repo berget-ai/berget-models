@@ -1694,10 +1694,19 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
     );
     if (ts?.ok) {
       const last = subResults[subResults.length - 1];
-      const segs = ts.data?.segments?.length || 0;
-      const words = ts.data?.words?.length || 0;
-      last.success = segs > 0 || words > 0;
-      last.message = `Segments: ${segs}, Words: ${words} · ${last.message}`;
+      // API kan returnera segments som array ELLER som objekt { segments: [...], word_segments: [...] }
+      const segArr = Array.isArray(ts.data?.segments)
+        ? ts.data.segments
+        : Array.isArray(ts.data?.segments?.segments)
+          ? ts.data.segments.segments
+          : [];
+      const wordArr = Array.isArray(ts.data?.words)
+        ? ts.data.words
+        : Array.isArray(ts.data?.segments?.word_segments)
+          ? ts.data.segments.word_segments
+          : [];
+      last.success = segArr.length > 0 || wordArr.length > 0;
+      last.message = `Segments: ${segArr.length}, Words: ${wordArr.length} · ${last.message}`;
       if (!last.success) overallSuccess = false;
     }
 
