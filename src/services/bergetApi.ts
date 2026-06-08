@@ -1792,6 +1792,7 @@ export async function testSpeechToText(
           success: true,
           message: "Skippad: modellen stödjer endast norska",
         });
+        publishProgress();
       }
     } else {
       for (const s of multilingualSamples) {
@@ -1805,6 +1806,7 @@ export async function testSpeechToText(
             success: false,
             message: err instanceof Error ? err.message : String(err),
           });
+          publishProgress();
           overallSuccess = false;
           continue;
         }
