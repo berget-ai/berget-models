@@ -210,6 +210,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
   const [testResults, setTestResults] = useState<Map<string, TestResult>>(new Map());
   const [isLoadingModels, setIsLoadingModels] = useState(true);
   const [isRunningTests, setIsRunningTests] = useState(false);
+  const [activeSttSubtests, setActiveSttSubtests] = useState<Map<string, number>>(new Map());
   const [popoverCloseCount, setPopoverCloseCount] = useState<Map<string, number>>(new Map());
   const [selectedResult, setSelectedResult] = useState<TestResult | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -253,7 +254,20 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
     const startTime = Date.now();
     
     try {
-      const testDetail = await feature.testFunction(model, apiKey, baseUrl);
+      const testDetail = await feature.testFunction(model, apiKey, baseUrl, feature.id === 'speech' ? (subResults, activeSubtest) => {
+        setTestResults(prev => new Map(prev.set(testKey, {
+          modelId: model.id,
+          feature: feature.id,
+          status: 'testing',
+          subResults
+        })));
+        setActiveSttSubtests(prev => {
+          const next = new Map(prev);
+          if (activeSubtest) next.set(testKey, activeSubtest);
+          else next.delete(testKey);
+          return next;
+        });
+      } : undefined);
       const duration = Date.now() - startTime;
       
       setTestResults(prev => new Map(prev.set(testKey, {
@@ -268,6 +282,11 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
         tokensPerSecond: testDetail.tokensPerSecond,
         subResults: testDetail.subResults
       })));
+      setActiveSttSubtests(prev => {
+        const next = new Map(prev);
+        next.delete(testKey);
+        return next;
+      });
     } catch (error) {
       const duration = Date.now() - startTime;
       
@@ -278,6 +297,11 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
         message: error instanceof Error ? error.message : 'Okänt fel',
         duration
       })));
+      setActiveSttSubtests(prev => {
+        const next = new Map(prev);
+        next.delete(testKey);
+        return next;
+      });
     }
   };
 
