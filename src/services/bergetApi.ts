@@ -1544,7 +1544,12 @@ function isInternalServerError(status: number, data: any): boolean {
   return code === "INTERNAL_ERROR" || code === "internal_error" || status >= 500;
 }
 
-export async function testSpeechToText(model: Model, apiKey: string, baseUrl: string): Promise<TestDetail> {
+export async function testSpeechToText(
+  model: Model,
+  apiKey: string,
+  baseUrl: string,
+  onProgress?: (subResults: SubResult[], activeSubtest?: number) => void
+): Promise<TestDetail> {
   const modelId = model.id.toLowerCase();
   const isNorwegian = modelId.includes("nb-whisper") || modelId.includes("nb_whisper");
   const isWhisperLarge = modelId.includes("whisper-large");
@@ -1573,6 +1578,15 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
 
   const subResults: SubResult[] = [];
   let overallSuccess = true;
+
+  const getSubtestNumber = (name: string) => {
+    const match = name.match(/^(\d+)\./);
+    return match ? Number(match[1]) : undefined;
+  };
+
+  const publishProgress = (activeName?: string) => {
+    onProgress?.([...subResults], activeName ? getSubtestNumber(activeName) : undefined);
+  };
 
   async function runStt(
     name: string,
@@ -1607,6 +1621,8 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
 
     const curlCommand = curlParts.join(" \\\n  ");
 
+    publishProgress(name);
+
     const start = Date.now();
     let response: Response;
     try {
@@ -1623,6 +1639,7 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
         curlCommand,
         duration: Date.now() - start,
       });
+      publishProgress();
       if (opts.failOnError) overallSuccess = false;
       return null;
     }
@@ -1661,6 +1678,7 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
     });
 
     if (opts.failOnError && !ok && !opts.expectError) overallSuccess = false;
+    publishProgress();
     return { ok, data, meta };
   }
 
