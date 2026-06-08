@@ -444,6 +444,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
 
   const clearResults = () => {
     setTestResults(new Map());
+    setActiveSttSubtests(new Map());
     setPopoverCloseCount(new Map());
     toast({
       title: "Resultat rensade",
