@@ -1694,10 +1694,19 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
     );
     if (ts?.ok) {
       const last = subResults[subResults.length - 1];
-      const segs = ts.data?.segments?.length || 0;
-      const words = ts.data?.words?.length || 0;
-      last.success = segs > 0 || words > 0;
-      last.message = `Segments: ${segs}, Words: ${words} · ${last.message}`;
+      // API kan returnera segments som array ELLER som objekt { segments: [...], word_segments: [...] }
+      const segArr = Array.isArray(ts.data?.segments)
+        ? ts.data.segments
+        : Array.isArray(ts.data?.segments?.segments)
+          ? ts.data.segments.segments
+          : [];
+      const wordArr = Array.isArray(ts.data?.words)
+        ? ts.data.words
+        : Array.isArray(ts.data?.segments?.word_segments)
+          ? ts.data.segments.word_segments
+          : [];
+      last.success = segArr.length > 0 || wordArr.length > 0;
+      last.message = `Segments: ${segArr.length}, Words: ${wordArr.length} · ${last.message}`;
       if (!last.success) overallSuccess = false;
     }
 
@@ -1723,13 +1732,16 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
     if (align?.ok) {
       const last = subResults[subResults.length - 1];
       const detected = align.data?.language;
-      const expected = isNorwegian ? ["no", "nb", "nn", "norwegian"] : isWhisperLarge ? ["en", "english"] : ["sv", "swedish"];
+      // OBS: lokala test-audio-en.mp3 och test-audio.m4a innehåller faktiskt svenskt tal,
+      // bara nb-whisper-filen är norsk. Auto-detect ska ge motsvarande.
+      const expected = isNorwegian ? ["no", "nb", "nn", "norwegian"] : ["sv", "swedish"];
       const langOk = detected && expected.some((l) => String(detected).toLowerCase().includes(l));
       last.success = !!langOk;
       last.message = `Detekterat: ${detected || "okänt"} (förväntat: ${expected[0]}) · ${last.message}`;
+      if (!last.success) overallSuccess = false;
     }
 
-    // 8. Fel språkkod — ska ej ge 500
+    // 8. Fel språkkod — ska ej ge 500 (kan ge 200 med dålig transkription eller 4xx)
     const wrongLang = language === "de" ? "fr" : "de";
     await runStt(
       `8. Felaktigt språk (language=${wrongLang}) — ej 500`,
@@ -1738,12 +1750,12 @@ export async function testSpeechToText(model: Model, apiKey: string, baseUrl: st
       { failOnError: false }
     );
 
-    // 9. Ogiltig språkkod — ska ge 400, ej 500
+    // 9. Ogiltig språkkod — ska ge 4xx, ej 5xx
     await runStt(
       "9. Ogiltig språkkod (language=xx) — ska ge 4xx ej 5xx",
       { language: "xx" },
       audioBlob,
-      { failOnError: false }
+      { failOnError: false, expectError: true }
     );
 
     // 10-13. Flerspråkig auto-detektering (skippas för Norwegian-only modeller)
