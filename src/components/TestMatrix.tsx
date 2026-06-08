@@ -805,6 +805,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                               const testKey = getTestKey(model.id, 'speech');
                               const result = testResults.get(testKey);
                               const isRunning = result?.status === 'testing';
+                              const activeSttSubtest = activeSttSubtests.get(testKey);
                               return (
                                 <TableRow
                                   key={model.id}
@@ -851,7 +852,7 @@ export default function TestMatrix({ apiKey, onLogout, baseUrl }: TestMatrixProp
                                     let icon: ReactNode;
                                     if (model.isUp === false) {
                                       icon = <span className="text-xs text-muted-foreground/50">—</span>;
-                                    } else if (isRunning && !subRes) {
+                                    } else if (isRunning && activeSttSubtest === sub.num) {
                                       icon = <Loader2 className="h-4 w-4 animate-spin text-warning" />;
                                     } else if (!subRes) {
                                       icon = <Circle className="h-4 w-4 text-muted-foreground" />;
